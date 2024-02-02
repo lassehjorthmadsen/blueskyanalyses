@@ -1,5 +1,5 @@
 ---
-title: "About"
+title: "What is this?"
 ---
 
-About this site
+This site is a collaborative project between Mike Young Academy, and Lasse Hjorth Madsen. The goal is to better understand the dynamics of networks, using social media as a proxy.

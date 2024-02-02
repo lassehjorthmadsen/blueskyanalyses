@@ -1,0 +1,58 @@
+---
+title: "Keywords for Scientists"
+author: "Lasse Hjorth Madsen"
+execute:
+  echo: false
+  warning: false
+  cache: false
+---
+
+```{r set_up}
+library(tidyverse)
+library(quanteda)
+library(quanteda.textstats)
+
+prof <- readRDS("../../blueskynet/dev/net/profiles_2024-01-28.rds") |> 
+  as_tibble()
+```
+
+```{r}
+corp <- corpus(prof$description)
+
+toks <- tokens(corp, remove_punct = TRUE) |> 
+  tokens_remove(pattern = c(stopwords("en"), "|", "+"))
+
+dfm <- dfm(toks)
+freq <- dfm |> textstat_frequency(n = 100)
+
+bigrams <- tokens_ngrams(toks, n = 2, concatenator = " ")
+bi_dfm <- dfm(bigrams)
+bi_freq <- bi_dfm |> textstat_frequency(n = 100)
+```
+
+```{r}
+#| fig-height: 15
+freq %>% 
+  ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
+  geom_point() +
+  labs(x = "Frequency (log)", y = NULL) +
+  scale_x_log10() +
+  theme_minimal()
+```
+
+```{r}
+#| fig-height: 15
+bi_freq %>% 
+  ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
+  geom_point() +
+  labs(x = "Frequency (log)", y = NULL) +
+  scale_x_log10() +
+  theme_minimal()
+
+```
+
+```{r save}
+c(freq$feature, bi_freq$feature) |> 
+  write_lines("../data/description_freqs.txt")
+```
+

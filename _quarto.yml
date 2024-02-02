@@ -7,13 +7,14 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - about.qmd
+      - href: about.qmd
+        text: About
+      - href: notes/keywords.qmd
+        text: Keywords
+  page-footer: "Lasse Hjorth Madsen/Mike Young Academy" 
 
 format:
   html:
     theme: cosmo
     css: styles.css
     toc: true
-
-
-
