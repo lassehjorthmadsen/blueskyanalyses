@@ -9,11 +9,10 @@ auth_object <- get_token(identifier, password)
 token <- auth_object$accessJwt
 refresh_tok <- auth_object$refreshJwt
 
-# Get net and profiles from files 
-net <- readRDS("data/bignet_2024-01-31.rds")
-profiles <- readRDS("data/profiles_2024-01-31.rds") 
+# Get net from files 
+net <- readRDS("data/bignet_2024-02-03.rds")
 
-# Or, download fresh set of profiles
+# Download fresh set of profiles
 all_actors <- unique(net$actor_handle)
 profiles <- all_actors |> get_profiles(token)
 
@@ -21,24 +20,38 @@ profiles <- all_actors |> get_profiles(token)
 keywords <- read_lines(file = "data/science_keywords.txt")
 keywords <- paste(keywords, collapse = "|")
 
-# Check for keyword match -- we only match about half
+# Check for keyword match -- we only match about 2/3
 profiles |> count(keymatch = str_detect(description, keywords))
-
 matches <- profiles |> filter(str_detect(description, keywords)) 
 
 # Save the good profiles
-profiles |> saveRDS("data/profiles_2024-01-31.rds")
+matches |> saveRDS("data/profiles_2024-02-03.rds")
 
-# Clean and save net
-net_cleaned <- net |> 
-  filter(actor_handle %in% matches$handle) |> 
-  add_count(follows_handle) |> 
-  filter(n > 30) |> 
-  select(-n)
+# Clean net
+clean_net <- net |> 
+  filter(actor_handle %in% matches$handle,
+         actor_handle %in% follows_handle,
+         follows_handle %in% actor_handle)
 
-# Check
-sum(!net_cleaned$actor_handle %in% matches$handle)
+# Repeat these two steps until network converges
+# 1.
+followers <- clean_net |> count(follows_handle, name = "followers") 
+
+# 2.
+clean_net <- clean_net |> 
+  left_join(followers, by = c("actor_handle" = "follows_handle")) |> 
+  filter(followers >= 30,
+         actor_handle %in% follows_handle,
+         follows_handle %in% actor_handle) |> 
+  select(-followers)
+  
+# We should end up having same set of actors to the left and to the right
+n_distinct(clean_net$actor_handle)
+n_distinct(clean_net$follows_handle)
+setdiff(clean_net$actor_handle, clean_net$follows_handle)
 
 # Save everything
-matches |> saveRDS("data/profiles_2024-01-31.rds")
-net_cleaned |> saveRDS("data/bignet_2024-01-31.rds")
+profiles |> filter(handle %in% clean_net$actor_handle) |> 
+  saveRDS("data/clean_profiles_2024-02-03.rds")
+
+clean_net |> saveRDS("data/clean_net_2024-02-03.rds")
