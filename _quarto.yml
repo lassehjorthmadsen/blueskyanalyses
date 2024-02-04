@@ -2,19 +2,20 @@ project:
   type: website
 
 website:
-  title: "Blue Sky Social"
+  title: "Blue Sky Network"
   navbar:
     left:
       - href: index.qmd
-        text: Home
+        text: What is this?
+      - href: pages/big-list.qmd
+        text: The Big List
+      - href: pages/big-plot.qmd
+        text: The Big plot
       - href: about.qmd
         text: About
-      - href: notes/keywords.qmd
-        text: Keywords
   page-footer: "Lasse Hjorth Madsen/Mike Young Academy" 
 
 format:
   html:
     theme: cosmo
     css: styles.css
-    toc: true

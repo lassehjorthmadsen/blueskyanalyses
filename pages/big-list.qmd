@@ -1,0 +1,84 @@
+---
+title: "The Big List of Influential Scientists"
+format: html
+toc: false
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+```{r packages}
+#| cache: false
+library(tidygraph)
+library(igraph)
+library(DT)
+library(tidyverse)
+
+devtools::load_all(path = "../../blueskynet")
+```
+
+```{r load}
+net <- readRDS("../data/clean_net_2024-02-03.rds")
+profiles <- readRDS("../data/clean_profiles_2024-02-03.rds")
+```
+
+```{r compute}
+#| cache: true
+if (file.exists("graph.rds")) {
+  graph <- read_rds("graph.rds")
+  graph_tbl <- read_csv2("graph.csv")
+} else {
+  # 1. graph object
+  graph <- net |>
+    filter(follows_handle %in% actor_handle) |>
+    as_tbl_graph() |>
+    activate(nodes)
+  
+  # 2. compute centrality
+  centrality <- centr_betw(graph)
+  V(graph)$centrality <- centrality$res
+  
+  # 3. Identify high density subgraphs, "communities"
+  community <- cluster_walktrap(graph)
+  V(graph)$community <- community$membership
+  
+  # 4. compute page rank
+  prank <- page.rank(graph)
+  V(graph)$pageRank <- prank$vector
+  
+  # 5. Join and save
+  followers <- net |> count(follows_handle, name = "insideFollowers")
+  
+  graph_tbl <- graph |>
+    as_tibble() |>
+    rename(handle = name) |>
+    inner_join(profiles, by = "handle") |>
+    left_join(followers, by = c("handle" = "follows_handle")) |> 
+    select(handle, displayName, description, centrality, pageRank, 
+           community, insideFollowers, followersCount, followsCount, postsCount)
+  
+  graph |>  saveRDS("graph.rds")
+  graph_tbl |> write_csv2("graph.csv")
+  
+  # There's an issue with Rstudio slowing down when list of large 
+  # igraph objects is created. https://github.com/rstudio/rstudio/issues/13489
+  rm(graph) 
+}
+```
+
+The list is sortable, searchable, and playable. Have fun.
+\
+\
+
+```{r rank}
+#| cache: false
+#| column: page
+top <- graph_tbl |> 
+  slice_max(order_by = centrality, n = 100, with_ties = FALSE) |> 
+  mutate(across(centrality, \(x) round(x, digits = 0)))
+
+top |> select(handle, displayName, description, centrality) |> 
+  datatable(rownames= FALSE)
+```
+

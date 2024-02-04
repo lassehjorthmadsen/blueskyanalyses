@@ -31,7 +31,8 @@ matches |> saveRDS("data/profiles_2024-02-03.rds")
 clean_net <- net |> 
   filter(actor_handle %in% matches$handle,
          actor_handle %in% follows_handle,
-         follows_handle %in% actor_handle)
+         follows_handle %in% actor_handle,
+         actor_handle != follows_handle)
 
 # Repeat these two steps until network converges
 # 1.

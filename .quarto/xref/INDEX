@@ -7,5 +7,20 @@
   },
   "notes/keywords.qmd": {
     "keywords.html": "1998adec"
+  },
+  "pages/influential.qmd": {
+    "influential.html": "4976c5b3"
+  },
+  "pages/3dplot.qmd": {
+    "3dplot.html": "c6ceb384"
+  },
+  "pages/big-list.qmd": {
+    "big-list.html": "9c82a0c5"
+  },
+  "pages/big-plot.qmd": {
+    "big-plot.html": "0a2edf50"
+  },
+  "notes/notes.qmd": {
+    "notes.html": "72278092"
   }
 }

@@ -1,5 +1,24 @@
 ---
-title: "Networks on Blue Sky Social"
+title: "What is this?"
+author: "Lasse Hjorth Madsen"
+date: today 
+format: html
 ---
 
-This site is for researching how professional networks form and function on the Blue Sky Social platform.
+```{r load}
+#| echo: false
+profiles <- readRDS("data/clean_profiles_2024-02-03.rds")
+```
+We've build a network of scientists and researchers active on Blue Sky Social, for the purpose of better understanding the dynamics of such a network.
+
+The network is build using an iterative algorithm, that starts off with a list of hand-picked members of the scientific community, then expands the network step-by-step. This happens by considering potential new members that:
+
+-   Are being followed by a substantial members of the existing network
+
+-   Have a description that indicates a affiliation with, or strong interest in, the scientific community
+
+In the end we arrived at a science oriented network of `r nrow(profiles)` members (or 'actors') on Blue Sky Social. Many, but not all, are working with research at some research institution. A few are science writers, independent researchers, working at private organisations, retired, or in some other way connected to the Blue Sky Social scientific community.
+
+Once the network is established, we can compute centrality measures, like [Betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality) or [PageRank](https://en.wikipedia.org/wiki/PageRank) to identify members that may be particular influential.
+
+Over at [The Big List](pages/big-list.qmd), we have a table with the top-100 members of the network, according to centrality. Feel free to explore the list, or play with the interactive [3D-plot](pages/big-plot.qmd) made with [The threejs package](https://bwlewis.github.io/rthreejs/) for R.
