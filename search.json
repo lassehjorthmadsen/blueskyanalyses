@@ -1,16 +1,37 @@
 [
   {
+    "objectID": "pages/big-plot.html",
+    "href": "pages/big-plot.html",
+    "title": "The Big Plot of Scientists on Blue Sky Social",
+    "section": "",
+    "text": "This is a 3d-visualization of the scientists’ network on Blue Sky Social. The plot is interactive, you can pan, zoom, rotate, using mouse or touch screen. Hovering over any individual will show their Blue Sky description. Perhaps go full-screen with F11. Have fun."
+  },
+  {
+    "objectID": "notes/notes.html",
+    "href": "notes/notes.html",
+    "title": "notes",
+    "section": "",
+    "text": "Several more data points are included, like ‘community’, a number used to identify members that may belong to the same subnetwork, or community. We use an algorithm that looks for densely connected subgraphs to identify such communities.\nOther metrics are simple counts: insideFollowers shows the number of followers a member has from inside the network; followersCount the total number of followers a member has; followsCount the number of members being followed; and postsCount the total number of posts from that member."
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Professional Networks on Blue Sky Social",
+    "title": "What is this?",
     "section": "",
-    "text": "This site is for researching how professional networks form and function on the Blue Sky Social platform."
+    "text": "We’ve build a network of scientists and researchers active on Blue Sky Social, for the purpose of better understanding the dynamics of such a network.\nThe network is build using an iterative algorithm, that starts off with a list of hand-picked members of the scientific community, then expands the network step-by-step. This happens by considering potential new members that:\n\nAre being followed by a substantial members of the existing network\nHave a description that indicates a affiliation with, or strong interest in, the scientific community\n\nIn the end we arrived at a science oriented network of 8949 members (or ‘actors’) on Blue Sky Social. Many, but not all, are working with research at some research institution. A few are science writers, independent researchers, working at private organisations, retired, or in some other way connected to the Blue Sky Social scientific community.\nOnce the network is established, we can compute centrality measures, like Betweenness centrality or PageRank to identify members that may be particular influential.\nOver at The Big List, we have a table with the top-100 members of the network, according to centrality. Feel free to explore the list, or play with the interactive 3D-plot made with The threejs package for R."
   },
   {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "About this site"
+    "text": "This site is a collaborative project between Mike Young of Mike Young Academy, and data scientist Lasse Hjorth Madsen. The goal is to better understand the dynamics of networks, using social media as a proxy. Feel free to follow Lasse or Mike on Blue Sky Social for future opdates on the project."
+  },
+  {
+    "objectID": "pages/big-list.html",
+    "href": "pages/big-list.html",
+    "title": "The Big List of Influential Scientists",
+    "section": "",
+    "text": "The list is sortable, searchable, and playable. Have fun."
   }
 ]
