@@ -1,11 +1,11 @@
 ---
-title: "The Big List of Influential Scientists"
+title: "List of Influential Scientists"
 format: html
 toc: false
 execute:
   echo: false
   warning: false
-  cache: true
+  cache: false
 ---
 
 ```{r packages}
@@ -19,6 +19,7 @@ devtools::load_all(path = "../../blueskynet")
 ```
 
 ```{r load}
+#| cache: true
 net <- readRDS("../data/clean_net_2024-02-03.rds")
 profiles <- readRDS("../data/clean_profiles_2024-02-03.rds")
 ```

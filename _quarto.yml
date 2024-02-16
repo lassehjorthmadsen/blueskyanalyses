@@ -2,15 +2,15 @@ project:
   type: website
 
 website:
-  title: "Blue Sky Network"
+  title: "Scientists on Bluesky"
   navbar:
     left:
       - href: index.qmd
         text: What is this?
       - href: pages/big-list.qmd
-        text: The Big List
+        text: Influential Scientists 
       - href: pages/big-plot.qmd
-        text: The Big plot
+        text: Network Visualisation
       - href: about.qmd
         text: About
   page-footer: "Lasse Hjorth Madsen/Mike Young Academy" 

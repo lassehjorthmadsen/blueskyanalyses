@@ -1,5 +1,5 @@
 ---
-title: "The Big Plot of Scientists on Blue Sky Social"
+title: "Visualisation of Scientist Network on Bluesky"
 format: html
 toc: false
 execute:
