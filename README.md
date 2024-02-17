@@ -1,1 +1,1 @@
-This is for showcasing analysis made of networks on Blue Sky Social. Have a look at the [site](https://lassehjorthmadsen.github.io/blueskyanalyses/).
+This is for showcasing analyses of networks on Bluesky Social. Have a look at the [site](https://lassehjorthmadsen.github.io/blueskyanalyses/) with some interesting results.
