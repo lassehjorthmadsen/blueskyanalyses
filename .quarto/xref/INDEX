@@ -22,5 +22,8 @@
   },
   "notes/notes.qmd": {
     "notes.html": "72278092"
+  },
+  "notes/explainer.qmd": {
+    "explainer.html": "216f77e2"
   }
 }
