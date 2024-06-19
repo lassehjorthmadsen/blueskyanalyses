@@ -1,4 +1,4 @@
-# Build a network of scientists by expanding a smaller net
+# Build a network of researchers and others professions by expanding a smaller net
 
 library(tidyverse)
 devtools::load_all("../blueskynet")
@@ -9,31 +9,30 @@ auth_object <- get_token(identifier, password)
 token <- auth_object$accessJwt
 refresh_tok <- auth_object$refreshJwt
 
-file_name <- paste0("data/bignet_", Sys.Date(), ".rds")
-profile_file_name <- paste0("data/profiles_", Sys.Date(), ".rds")
+########################
+# BUILD RESEARCH NETWORK
+########################
 
-# Get the science keywords
-keywords <- read_lines(file = "data/science_keywords.txt")
+file_name <- paste0("data/research_big_net_", Sys.Date(), ".rds")
 
-# The profiles I'm following form a starting point
-follows <- get_follows(identifier, token)
+# Get the researcher keywords
+keywords <- read_lines(file = "data/research_keywords.txt")
 
-# Now, get follows of follows: The network that we want
-net <- follows$handle |> 
-  as.list() |> 
-  set_names() |> 
-  map_dfr(get_follows, token, .id = "actor_handle", .progress = TRUE) |>
-  select(actor_handle, follows_handle = handle)
+# Get a saved net
+net <- readRDS("data/research_big_net_2024-06-18.rds")
+net <- readRDS("data/research_big_net_2024-02-03.rds")
 
-# Or, get a saved net
-net <- readRDS("data/bignet_2024-02-03.rds")
+net <- net |>
+  dplyr::distinct(.keep_all = TRUE) |>
+  na.omit()
 
-# Expand the net (can take a loooong time)
+# Expand the net
+# set.seed(100)
 expnet <- expand_net(net = net,
                      keywords = keywords,
                      token = token,
                      refresh_tok = refresh_tok,
-                     save_net = TRUE,
+                     save_net = FALSE,
                      file_name = file_name,
                      threshold = 30,
                      max_iterations = 30,
@@ -41,4 +40,33 @@ expnet <- expand_net(net = net,
 
 # Save the result
 expnet$expanded_net |> saveRDS(file_name)
-expnet$profiles |> saveRDS(profile_file_name)
+
+
+##########################
+# BUILD JOURNALIST NETWORK
+##########################
+
+file_name <- paste0("data/journalist_bignet_", Sys.Date(), ".rds")
+
+# Get the researcher keywords
+keywords <- read_lines(file = "data/journalist_keywords.txt")
+
+# Get a saved net
+key_actor <- 
+
+net <- tibble("actor_handle" = "slooterman.bsky.social", "follows_handle" = "mcgowankat.bsky.social")
+
+
+# Expand the net 
+expnet <- expand_net(net = net,
+                     keywords = keywords,
+                     token = token,
+                     refresh_tok = refresh_tok,
+                     save_net = FALSE,
+                     file_name = file_name,
+                     threshold = 1,
+                     max_iterations = 30,
+                     sample_size = Inf)
+
+# Save the result
+expnet$expanded_net |> saveRDS(file_name)

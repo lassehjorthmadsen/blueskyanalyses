@@ -1,6 +1,10 @@
-tidygraph
-igraph
-DT
+base
+methods
+datasets
+utils
+grDevices
+graphics
+stats
 tidyverse
 ggplot2
 tibble
@@ -11,4 +15,4 @@ dplyr
 stringr
 forcats
 lubridate
-blueskynet
+DT

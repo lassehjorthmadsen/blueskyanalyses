@@ -4,8 +4,9 @@ library(tidyverse)
 devtools::load_all("../blueskynet")
 
 # Get saved net and profiles
-net <- readRDS("data/bignet_2024-02-03.rds")
-profiles <- readRDS("data/profiles_2024-02-03.rds")
+oldnet <- readRDS("data/research_big_net_2024-02-03.rds")
+net <- readRDS("data/research_big_net_2024-06-18.rds")
+profiles <- readRDS("data/research_profiles_2024-06-18.rds")
 
 # Do we have duplicates? Yes. Figure out if this is because of a bug?
 n_distinct(net)
@@ -47,3 +48,8 @@ n_distinct(small_net$actor_handle)
 n_distinct(small_net$follows_handle)
 
 setdiff(small_net$actor_handle, small_net$follows_handle)
+
+trimmed_net <- trim_net(net, 30)
+trimmed_oldnet <- trim_net(oldnet, 30)
+
+
