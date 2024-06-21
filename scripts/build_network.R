@@ -47,8 +47,8 @@ expnet |> saveRDS(file_name)
 ##########################
 
 net_file      <- paste0("data/journalist_clean_net_", Sys.Date(), ".rds")
-profile_file  <- file_name |> str_replace("_clean_net_", "_profiles_")
-widget_file   <- file_name |> str_replace("_clean_net_", "_widget_")
+profile_file  <- net_file |> str_replace("_clean_net_", "_profiles_")
+widget_file   <- net_file |> str_replace("_clean_net_", "_widget_")
 keywords_file <- "data/journalist_keywords.txt"
 
 # Get the researcher keywords
