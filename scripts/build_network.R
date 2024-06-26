@@ -46,60 +46,150 @@ expnet |> saveRDS(file_name)
 # BUILD JOURNALIST NETWORK
 ##########################
 
-net_file      <- paste0("data/journalist_clean_net_", Sys.Date(), ".rds")
-profile_file  <- net_file |> str_replace("_clean_net_", "_profiles_")
-widget_file   <- net_file |> str_replace("_clean_net_", "_widget_")
 keywords_file <- "data/journalist_keywords.txt"
+key_actor     <- "slooterman.bsky.social"
+net_file      <- paste0("data/journalist_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/journalist_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/journalist_widget_", Sys.Date(), ".html")
 
-# Get the researcher keywords
 keywords <- read_lines(file = keywords_file)
-keywords_collapsed <- keywords |> paste0(collapse = "|")
 
-# Get initial net based on key actor
-key_actor <- "slooterman.bsky.social"
-small_net <- init_net(key_actor, keywords, token)
+# Small demo
+journalist_bundle <- build_network(key_actor = key_actor,
+                                   keywords = keywords,
+                                   token = token,
+                                   refresh_tok = refresh_tok,
+                                   threshold = 0.2,
+                                   max_iterations = 1,
+                                   sample_size = 10)
 
-# Expand the net 
-expnet <- expand_net(net = small_net,
-                     keywords = keywords,
-                     token = token,
-                     refresh_tok = refresh_tok,
-                     save_net = FALSE,
-                     file_name = file_name,
-                     threshold = 0.005,
-                     max_iterations = 30,
-                     sample_size = Inf)
+# The real deal  
+journalist_bundle <- build_network(key_actor = key_actor,
+                                   keywords = keywords,
+                                   token = token,
+                                   refresh_tok = refresh_tok,
+                                   threshold = 0.025)
 
-# ... or load one made earlier
-net <- readRDS(net_file)
-
-# Trim the net
-net <- net |> trim_net(threshold = 0.05)
-
-# Check
-setequal(net$actor_handle, net$follows_handle) 
-
-# Get profiles
-profiles <- get_profiles(unique(net$actor_handle), token)
-
-# Clean profiles
-profiles <- profiles |> 
-  select(-starts_with("V"), 
-         -starts_with("associated"), 
-         -avatar, -banner, -createdAt, -indexedAt) |>
-  distinct(.keep_all = TRUE)
-
-# Add metrics
-profiles <- profiles |> add_metrics(net) 
-
-# Create widget
-widget <- create_widget(net, profiles)
-  
 # Save the result
-net      |> saveRDS(net_file)
-profiles |> saveRDS(profile_file)
-profiles |> write.csv2(str_replace(profile_file, ".rds", ".csv"))
-widget   |> saveRDS(widget_file)
-widget   |> saveWidget(str_replace(widget_file, ".rds", ".html"))
+journalist_bundle$net      |> saveRDS(net_file)
+journalist_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+journalist_bundle$widget   |> saveWidget(widget_file)
 
-                       
+
+##########################
+# BUILD ARTIST NETWORK
+##########################
+
+keywords_file <- "data/artist_keywords.txt"
+key_actor     <- "miraongchua.com"
+net_file      <- paste0("data/artist_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/artist_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/artist_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+artist_bundle <- build_network(key_actor = key_actor,
+                                   keywords = keywords,
+                                   token = token,
+                                   refresh_tok = refresh_tok,
+                                   threshold = 0.025)
+
+# Save the result
+artist_bundle$net      |> saveRDS(net_file)
+artist_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+artist_bundle$widget   |> saveWidget(widget_file)
+
+############################
+# BUILD DATA SCIENCE NETWORK
+############################
+
+keywords_file <- "data/data_scientist_keywords.txt"
+key_actor     <- "nataliafavila.bsky.social"
+net_file      <- paste0("data/data_science_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/data_science_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/data_science_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+data_science_bundle <- build_network(key_actor = key_actor,
+                               keywords = keywords,
+                               token = token,
+                               refresh_tok = refresh_tok,
+                               threshold = 0.025)
+
+# Save the result
+data_science_bundle$net      |> saveRDS(net_file)
+data_science_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+data_science_bundle$widget   |> saveWidget(widget_file)
+
+
+############################
+# BUILD WRITER NETWORK
+############################
+
+keywords_file <- "data/writer_keywords.txt"
+key_actor     <- "neilhimself.neilgaiman.com"
+net_file      <- paste0("data/writer_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/writer_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/writer_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+writer_bundle <- build_network(key_actor = key_actor,
+                                     keywords = keywords,
+                                     token = token,
+                                     refresh_tok = refresh_tok,
+                                     threshold = 0.025)
+
+# Save the result
+writer_bundle$net      |> saveRDS(net_file)
+writer_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+writer_bundle$widget   |> saveWidget(widget_file)
+
+
+############################
+# BUILD BOARD GAME NETWORK
+############################
+
+keywords_file <- "data/board_game_keywords.txt"
+key_actor     <- "hours.bsky.social"
+net_file      <- paste0("data/board_game_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/board_game_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/board_game_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+board_game_bundle <- build_network(key_actor = key_actor,
+                               keywords = keywords,
+                               token = token,
+                               refresh_tok = refresh_tok,
+                               threshold = 0.025)
+
+# Save the result
+board_game_bundle$net      |> saveRDS(net_file)
+board_game_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+board_game_bundle$widget   |> saveWidget(widget_file)
+
+
+################################
+# BUILD CLIMATE ACTIVIST NETWORK
+################################
+
+keywords_file <- "data/climate_activist_keywords.txt"
+key_actor     <- "fightclimatechange.bsky.social"
+net_file      <- paste0("data/climate_activist_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/climate_activist_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/climate_activist_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+climate_activist_bundle <- build_network(key_actor = key_actor,
+                                    keywords = keywords,
+                                    token = token,
+                                    refresh_tok = refresh_tok,
+                                    threshold = 0.025)
+
+# Save the result
+climate_activist_bundle$net      |> saveRDS(net_file)
+climate_activist_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+climate_activist_bundle$widget   |> saveWidget(widget_file)
