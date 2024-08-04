@@ -1,0 +1,37 @@
+---
+title: "List of Influential Scientists"
+format: html
+toc: false
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+```{r packages}
+#| cache: false
+library(tidyverse)
+library(DT)
+```
+
+```{r load}
+net      <- readRDS("../data/research_clean_net_2024-06-18.rds")
+profiles <- readRDS("../data/research_clean_profiles_2024-06-18.rds")
+graph    <- readRDS("../data/research_graph_2024-06-18.rds")
+```
+
+The list is sortable, searchable, and playable. Have fun.
+\
+\
+
+```{r rank}
+#| cache: false
+#| column: page
+top <- profiles |> 
+  slice_max(order_by = centrality, n = 100, with_ties = FALSE) |> 
+  mutate(across(centrality, \(x) round(x, digits = 0)))
+
+top |> select(handle, displayName, description, centrality) |> 
+  datatable(rownames= FALSE)
+```
+

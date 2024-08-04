@@ -1,0 +1,8 @@
+---
+title: "notes"
+author: "Lasse"
+---
+
+Several more data points are included, like 'community', a number used to identify members that may belong to the same subnetwork, or community. We use an [algorithm](https://igraph.org/r/doc/cluster_walktrap.html) that looks for densely connected subgraphs to identify such communities.
+
+Other metrics are simple counts: `insideFollowers` shows the number of followers a member has from *inside* the network; `followersCount` the *total* number of followers a member has; `followsCount` the number of members *being* followed; and `postsCount` the total number of posts from that member.

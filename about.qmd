@@ -1,0 +1,5 @@
+---
+title: "About"
+---
+
+This site is a collaborative project between Mike Young of [Mike Young Academy](https://mikeyoungacademy.dk/), and data scientist [Lasse Hjorth Madsen](https://www.linkedin.com/in/lassehjorthmadsen/). The goal is to better understand the dynamics of research networks, using social media as a proxy. Feel free to follow [Lasse](https://bsky.app/profile/lassehjorthmadsen.bsky.social) or [Mike](https://bsky.app/profile/mkeyoung.bsky.social) on Bluesky Social for future opdates on the project.

@@ -1,0 +1,77 @@
+---
+title: "Keywords for Scientists"
+author: "Lasse Hjorth Madsen"
+execute:
+  echo: false
+  warning: false
+  cache: false
+---
+
+```{r set_up}
+library(tidyverse)
+library(quanteda)
+library(quanteda.textstats)
+
+research <- readRDS("../data/research_clean_profiles_2024-06-18.rds") |> as_tibble()
+journalist <- readRDS("../data/journalist_profiles_2024-06-20.rds") |> as_tibble()
+```
+
+```{r research_corpus}
+corp <- corpus(research$description)
+
+toks <- tokens(corp, remove_punct = TRUE) |> 
+  tokens_remove(pattern = c(stopwords("en"), "|", "+"))
+
+dfm <- dfm(toks)
+freq <- dfm |> textstat_frequency(n = 100)
+
+bigrams <- tokens_ngrams(toks, n = 2, concatenator = " ")
+bi_dfm <- dfm(bigrams)
+bi_freq <- bi_dfm |> textstat_frequency(n = 100)
+```
+
+```{r research_plot1}
+#| fig-height: 15
+freq %>% 
+  ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
+  geom_point() +
+  labs(x = "Frequency (log)", y = NULL) +
+  scale_x_log10() +
+  theme_minimal() +
+  labs("Uni-gram frequencies")
+```
+
+
+```{r research_plot2}
+#| fig-height: 15
+bi_freq %>% 
+  ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
+  geom_point() +
+  labs(x = "Frequency (log)", y = NULL) +
+  scale_x_log10() +
+  theme_minimal() +
+  labs("Bi-gram frequencies")
+```
+
+
+```{r save}
+c(freq$feature, bi_freq$feature) |> 
+  write_lines("../data/research_description_freqs.txt")
+```
+
+
+```{r journalist_corpus}
+corp <- corpus(journalist$description)
+
+toks <- tokens(corp, remove_punct = TRUE) |> 
+  tokens_remove(pattern = c(stopwords("en"), "|", "+"))
+
+dfm <- dfm(toks)
+freq <- dfm |> textstat_frequency(n = 100)
+
+bigrams <- tokens_ngrams(toks, n = 2, concatenator = " ")
+bi_dfm <- dfm(bigrams)
+bi_freq <- bi_dfm |> textstat_frequency(n = 100)
+```
+
+
