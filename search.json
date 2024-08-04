@@ -1,0 +1,51 @@
+[
+  {
+    "objectID": "pages/big-plot.html",
+    "href": "pages/big-plot.html",
+    "title": "Visualisation of Scientist Network on Bluesky",
+    "section": "",
+    "text": "This is a 3d-visualization of the scientists’ network on Bluesky Social. The plot is interactive, you can pan, zoom, rotate, using mouse or touch screen. Hovering over any individual will show their Blue Sky description. Perhaps go full-screen with F11. Have fun."
+  },
+  {
+    "objectID": "notes/notes.html",
+    "href": "notes/notes.html",
+    "title": "notes",
+    "section": "",
+    "text": "Several more data points are included, like ‘community’, a number used to identify members that may belong to the same subnetwork, or community. We use an algorithm that looks for densely connected subgraphs to identify such communities.\nOther metrics are simple counts: insideFollowers shows the number of followers a member has from inside the network; followersCount the total number of followers a member has; followsCount the number of members being followed; and postsCount the total number of posts from that member."
+  },
+  {
+    "objectID": "notes/explainer.html",
+    "href": "notes/explainer.html",
+    "title": "Centrality Explained",
+    "section": "",
+    "text": "[1] 7 7 7 7 7 7 7"
+  },
+  {
+    "objectID": "notes/explainer.html#centrality-concepts",
+    "href": "notes/explainer.html#centrality-concepts",
+    "title": "Centrality Explained",
+    "section": "",
+    "text": "[1] 7 7 7 7 7 7 7"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "This site is a collaborative project between Mike Young of Mike Young Academy, and data scientist Lasse Hjorth Madsen. The goal is to better understand the dynamics of research networks, using social media as a proxy. Feel free to follow Lasse or Mike on Bluesky Social for future opdates on the project."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "What is this?",
+    "section": "",
+    "text": "We’ve built a network of scientists and researchers active on Bluesky Social. The goal is to better understand how this group of users interact on the platform.\nThe network is built using an iterative algorithm that works like this: We start off with a list of hand-picked members of the scientific community, then expand the network step-by-step. This takes place by considering potential new members that:\n\nare being followed by a substantial number from the existing network\nhave a bio description that indicates an affiliation with, or strong interest in, the scientific community\n\nAfter a number of iterations, we arrived at a science-oriented network of 22,255 members (or ‘actors’) on Bluesky. Many, but not all, do research at a research institution. A few are science writers, independent researchers, or work at private organisations.\nOnce the network is established, we can compute centrality measures, like betweenness centrality or PageRank to identify members that may be particularly influential.\nOver at the list of Influential Scientists, we have a table with the top-100 members of the network, ranked by centrality. Feel free to explore the list, or play with the interactive Network Visualisation."
+  },
+  {
+    "objectID": "pages/big-list.html",
+    "href": "pages/big-list.html",
+    "title": "List of Influential Scientists",
+    "section": "",
+    "text": "The list is sortable, searchable, and playable. Have fun."
+  }
+]
