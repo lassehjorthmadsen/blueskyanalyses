@@ -10,9 +10,9 @@ auth_object <- get_token(identifier, password)
 token <- auth_object$accessJwt
 refresh_tok <- auth_object$refreshJwt
 
-########################
-# BUILD RESEARCH NETWORK
-########################
+###########################
+# RE-BUILD RESEARCH NETWORK
+###########################
 
 file_name <- paste0("data/research_big_net_", Sys.Date(), ".rds")
 
@@ -40,6 +40,31 @@ expnet <- expand_net(net = net,
 
 # Save the result
 expnet |> saveRDS(file_name)
+
+
+
+##########################
+# BUILD RESEARCH NETWORK
+##########################
+
+keywords_file <- "data/research_keywords.txt"
+key_actor     <- "rossdahlke.bsky.social"
+net_file      <- paste0("data/research_net_", Sys.Date(), ".rds")
+profile_file  <- paste0("data/research_profiles_", Sys.Date(), ".csv")
+widget_file   <- paste0("data/research_widget_", Sys.Date(), ".html")
+
+keywords <- read_lines(file = keywords_file)
+
+research_bundle <- build_network(key_actor = key_actor,
+                               keywords = keywords,
+                               token = token,
+                               refresh_tok = refresh_tok,
+                               threshold = 0.025)
+
+# Save the result
+research_bundle$net      |> saveRDS(net_file)
+research_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+research_bundle$widget   |> saveWidget(widget_file)
 
 
 ##########################
