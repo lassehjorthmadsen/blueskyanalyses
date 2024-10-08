@@ -13,7 +13,8 @@ website:
         text: Network Visualisation
       - href: about.qmd
         text: About
-  page-footer: "Lasse Hjorth Madsen/Mike Young Academy" 
+  page-footer: "Lasse Hjorth Madsen/Mike Young Academy"
+  google-analytics: "G-BYW6M5N4T9"
 
 format:
   html:
