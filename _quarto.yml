@@ -11,8 +11,13 @@ website:
         text: Influential Scientists 
       - href: pages/big-plot.qmd
         text: Network Visualisation
+      - text: Notebooks
+        menu:
+        - href: notes/compare.qmd
+          text: Compare Networks
       - href: about.qmd
         text: About
+
   page-footer: "Lasse Hjorth Madsen/Mike Young Academy"
   google-analytics: "G-BYW6M5N4T9"
 

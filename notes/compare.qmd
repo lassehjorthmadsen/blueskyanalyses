@@ -1,0 +1,279 @@
+---
+title: "Compare Newer and Older Net"
+author: "Lasse Hjorth Madsen"
+date: today
+format: html
+toc: true
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+```{r setup, cache=FALSE}
+#|cache: false
+library(tidyverse)
+library(kableExtra)
+library(quanteda)
+library(quanteda.textstats)
+theme_set(theme_minimal() + 
+            theme(axis.title.x = element_text(margin = margin(t = 10, r =  0, b = 0, l = 0)),
+                  axis.title.y = element_text(margin = margin(t =  0, r = 10, b = 0, l = 0))))
+```
+
+# What is this?
+
+This is a review of the latest update of the Bluesky Social Science and Research Network. We compare the current network with the previous one: How many new network members did we get; how many did we lose; what are some characteristics of the newcomers?
+
+
+```{r get_data}
+new_pr  <- readRDS("../data/research_profiles_2024-10-24.rds")
+old_pr <- readRDS("../data/research_clean_profiles_2024-06-18.rds")
+
+new_net <- readRDS("../data/research_net_2024-10-23.rds")
+old_net <- readRDS("../data/research_clean_net_2024-06-18.rds")
+
+keywords <- read_lines(file = "../data/research_keywords.txt") |> 
+  as_tibble() |> 
+  rename(keyword = value) |> 
+  mutate(new = str_sub(keyword, 1, 1) %in% LETTERS)
+```
+
+```{r wrangle_data}
+new_keywords <- keywords |> filter(new) |> pull(keyword) |> paste(collapse = "|") |> tolower()
+old_keywords <- keywords |> filter(!new) |> pull(keyword) |> paste(collapse = "|") |> tolower()
+
+# Flag new members, flag if keyword matched is from the new set
+new_pr <- new_pr |> 
+  mutate(newcomer = if_else(did %in% old_pr$did, "Old friend", "Newcomer"),
+         `Creation month` = floor_date(ymd_hms(createdAt), unit = "month"),
+         matches_new_keyword = str_detect(tolower(description), new_keywords),
+         matches_old_keyword = str_detect(tolower(description), old_keywords)) 
+
+# Combine both nets
+both_nets <- new_net |>
+  mutate(Network = "Current") |> 
+  bind_rows(old_net) |> 
+  replace_na(replace = list(Network = "Previous"))
+```
+
+
+# Counts
+
+The current network, collected 2024-10-24, has `r nrow(new_pr)` members. The previous one, collected 2024-06-18, had `r nrow(old_pr)` members.
+
+The net gain in members is thus `r nrow(new_pr) - nrow(old_pr)` which comes from `r sum(new_pr$newcomer == "Newcomer")` newcomers minus `r nrow(dplyr::anti_join(old_pr, new_pr, by = "did"))` users that are no longer member of the research network.
+
+The current net was was collected using a slightly different version of the algorithm, so it's possible that some of the changes was because of that. Lost and gained members can also be due to some leaving or joining Bluesky Social, changes in descriptions, or in the connections between members.
+
+# Newcomers
+
+From the profile information, we know *when* the profiles where created, so we can check if all or most the newcomers have been created *after* the first network was collected.
+
+```{r newcomer_plot}
+#| fig-width: 9
+
+new_pr |> 
+  count(newcomer, `Creation month`, name = "Count") |> 
+  mutate(`Creation month` = as.Date(`Creation month`)) |> 
+  ggplot(aes(x = `Creation month`, y = Count, fill = newcomer)) + 
+  geom_col(position = "stack") +
+  scale_x_date(date_labels = "%b\n%Y", date_breaks = "2 months") +
+  geom_vline(xintercept = as.Date("2024-06-18"), color = "blue") +
+  labs(title = "Not all new network members are new on Bluesky Social",
+       subtitle = "Count of members by profile creation month and whether newcomer or not.\nBlue line shows when the older network was generated",
+       x = "Month of profile creation",
+       fill = NULL)
+```
+
+It seems that a significant chunk of the newcomers where created recently (most in August 2024) so that accounts for some of the increase, although not the major part. 
+
+# Keywords
+
+We added a bunch of new keywords, among other things to include the climate science field. Let's check if that affected the number of members included in the science network.
+
+### The original keywords
+
+```{r}
+#| output: asis
+old_keywords |> str_replace_all("\\|", ", ") |> paste0("**", . = _, "**") |> cat()
+```
+
+Some keywords in the above list, like "academic", are rather generic. The list was generated based on a statistical analysis of what words scientists or researchers on Bluesky Social was likely to include in their description. For that reason words like "Michigan" also made it to the list -- and might be removed again. 
+
+### The added keywords
+
+```{r}
+#| output: asis
+new_keywords |> str_replace_all("\\|", ", ") |> paste0("**", . = _, "**") |> cat()
+```
+Note that some of these are two-word phrases that really are redundant, since one is already included above. For example, "adjunct professor" is already covered by "professor". It doesn't harm, but for clarity and brievity we could clean this up a bit.
+
+Counting how many profiles matches the old and the new keywords (or both) we get:
+
+
+```{r}
+new_pr |> 
+  count(`Matches old keyword` = matches_old_keyword, 
+        `Matches new keyword` = matches_new_keyword) |> 
+  kbl()
+```
+
+We see that *no* profiles has a description that matches the new keywords without *also* matching the old ones.
+
+### Examples
+
+Spot-checking for descriptions that contain 
+"climatologist" we can look at the following descriptions:
+
+```{r}
+new_pr |> 
+  select(Handle = handle, Description = description) |> filter(str_detect(Description, "climatologist")) |> 
+  kbl()
+```
+
+
+# Distributions 
+
+What are the distributions of followers in the new/old network? Below, we plot the distribution of followers, in absolute numbers (left) and as a percentage of all network members (right). Both metrics are split by network: The smaller, older one and the newer, bigger one.
+
+```{r plot_dist}
+#| fig-width: 9
+plot_data <- 
+  both_nets |>
+  count(Network, follows_handle, name = "Follower count", ) |> 
+  group_by(Network) |> 
+  mutate(`Follower percent` = `Follower count` / n() * 100) |> 
+  ungroup() |>  
+  pivot_longer(cols = c(`Follower count`, `Follower percent`), names_to = "Metric", values_to = "Value")
+
+# Plot plot data
+plot_data |> 
+  ggplot(aes(x = Value, fill = Network)) + 
+  facet_wrap(vars(Metric), scales = "free_x") +
+  geom_histogram(color = NA, bins = 50, alpha = 0.7) +
+  scale_x_log10() +
+  labs(title = "Number of followers have similar distributions",
+     subtitle = "Count/percentage of followers in current and previous network",
+     x = "Value (log-scale)",
+     y = "Count" )
+```
+
+We note that the distributions are highly right-skewed, with a few profiles having very many followers. Also, since we increased the inclusion threshold from 30 to 40, the previous network has few more profiles at the low end of the scale. But since the current network is bigger, it has more members with a low number of followers when expressed as a percentage.
+
+We can look at some summary statistics to be more precise:
+
+```{r summarize}
+plot_data |> 
+  group_by(Network, Metric) |> 
+  summarise(Min. = min(Value),
+            `1st Qu.` = quantile(Value, 0.25),
+            Median = median(Value),
+            Mean = mean(Value),
+            `3st Qu.` = quantile(Value, 0.75),
+            Max. = max(Value),
+            .groups = "drop") |> 
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |> 
+  kbl()
+```
+
+For example, the median number of followers for members of the current is `r plot_data |> filter(Network == "Current", Metric == "Follower count") |> dplyr::pull(Value) |> median() |> round(0)`. Half has below that number of followers, the other half above.
+
+It's a little surprising that some members of the current network only has 39 followers, since we set the threshold at 40. It could be due to rare circumstances, when a member is included with 40 followers, but one of those followers is later *excluded*. 
+
+Indeed, looking at the actual counts, 40+ is much more common than 39:
+
+```{r head}
+plot_data |> count(Network, Metric, Value, name = "Count") |> slice_head(n = 5) |> kbl()
+```
+\
+While we're at it, let's check some of the extremely high values, to see if they are actually relevant network members (as opposed to some media or institutional profiles).
+
+
+```{r}
+new_net |>
+  add_count(follows_handle) |> 
+  distinct(follows_handle, .keep_all = TRUE) |> 
+  slice_max(n, n = 10) |> 
+  inner_join(new_pr, by = c("follows_handle" = "handle")) |> 
+  select(Handle = follows_handle, 
+         Description = description, 
+         `Followers count` = n, 
+         `Total followers`= followersCount, 
+         `Posts count`= postsCount) |> 
+  kbl()
+```
+
+The list does seem to contain valid members of the science and research network that just happens to have a lot of followers. Note that we included also the *total* number of followers, i.e. from profiles outside the network, as well as the count of posts. We see that those popular profiles tend to be very active and also popular outside the network. Not surprisingly, there are quite a bit of journalists, writers, and speakers in this select group.
+
+
+# Communities
+
+Finally, let's examine if the distribution of the communities changed. The "communities" are parts of the network that has a particular high density. They are detected using an algorithm, and they often align roughly with different academic fields.
+
+It's a little difficult to compare communities across networks, because the algorithm just assigns an arbitrary number to label profiles that are in the same community. A label of $3$ in the previous network does not have anyting to do with a label of $3$ in another network. But we can roughly map the two sets of communities: If profiles that used to be in community $3$ are now mostly in community $7$ we can assume they are similar (people don't change academic fields that often).
+
+In order to label the communities with something a little more descriptive, we take the top most frequent words from the profile description in each community. (To discount *very* frequent words, we use weighted frequencies, specifically ["term frequency–inverse document frequency"](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)).
+
+A plot of the distribution of communities in the previous and the current network:
+
+```{r compare_communities}
+# We need to approximately map the old community indices to the new ones
+community_map <- new_pr |>  
+  full_join(old_pr, by = "did") |> 
+  count(community.x, community.y) |> 
+  group_by(community.y) |> 
+  slice_max(n, with_ties = FALSE)
+
+# Get the top 3 words (tf-idf-weighted) per community, use as labels
+top_words <- corpus(new_pr, text_field = "description", docid_field = "handle") |>
+  tokens(remove_punct = TRUE) |>
+  tokens_remove(pattern = c(stopwords("en"), "|")) |>
+  dfm() |> 
+  dfm_tfidf() |> 
+  topfeatures(n = 3, groups = community) |> 
+  map(names) |> 
+  map_chr(paste, collapse = " | ") |> 
+  as_tibble() |> 
+  mutate(community = row_number())
+
+# Join to construct communities df
+coms <- old_pr |> 
+  select(community) |> 
+  mutate(Network = "Previous") |> 
+  left_join(community_map, by = c("community" = "community.y")) |> 
+  select(Network, community = community.x) |> 
+  bind_rows(new_pr) |> 
+  select(Network, community) |> 
+  replace_na(list("Network" = "Current")) |> 
+  left_join(top_words, by = "community") |> 
+  mutate(com_label = fct_rev(fct_infreq(value)))
+```
+
+```{r plot_communities}
+coms |> 
+  ggplot(aes(y = com_label, fill = Network)) +
+  geom_bar(position = "dodge") +
+  labs(title = "The social sciences community has grown the most",
+     subtitle = "Count of profiles by community in current and previous network",
+     x = "Count",
+     y = "Top words from descriptions" )
+```
+
+Almost all communities are bigger than before since the whole network has grown. We note that in particular the "law | science | policy" community has grown by a lot.
+
+To finish off, below are samples of influential profiles from each of the communities. Recall that each profile does not necessarily has the words from the community label in its description; the labels describe the community as a whole.  
+
+```{r}
+new_pr |> 
+  left_join(top_words, by = "community") |> 
+  mutate(com_label = fct_rev(fct_infreq(value))) |> 
+  group_by(com_label) |>
+  slice_max(centrality, n = 5) |> 
+  ungroup() |> 
+  select(Handle = handle, 
+         Description = description, 
+         `Community label` = com_label,
+         `Total followers`= followersCount) |> 
+  kbl()  
+```
