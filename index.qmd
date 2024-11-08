@@ -7,10 +7,10 @@ format: html
 
 ```{r load}
 #| echo: false
-profiles <- readRDS("data/research_clean_profiles_2024-06-18.rds")
+profiles <- readRDS("data/research_profiles_2024-10-24.rds")
 ```
 
-We've built a network of scientists and researchers active on Bluesky Social. The goal is to better understand how this group of users interact on the platform.
+We've built a network of scientists and researchers active on Bluesky. The goal is to better understand how this group of users interact on the platform.
 
 The network is built using an iterative algorithm that works like this: We start off with a list of hand-picked members of the scientific community, then expand the network step-by-step. This takes place by considering potential new members that:
 

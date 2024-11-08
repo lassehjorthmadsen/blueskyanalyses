@@ -15,9 +15,7 @@ library(DT)
 ```
 
 ```{r load}
-net      <- readRDS("../data/research_clean_net_2024-06-18.rds")
-profiles <- readRDS("../data/research_clean_profiles_2024-06-18.rds")
-graph    <- readRDS("../data/research_graph_2024-06-18.rds")
+profiles <- readRDS("../data/research_profiles_2024-10-24.rds")
 ```
 
 The list is sortable, searchable, and playable. Have fun.

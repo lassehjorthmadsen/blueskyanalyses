@@ -9,6 +9,7 @@ identifier <- Sys.getenv("BLUESKY_APP_USER")
 auth_object <- get_token(identifier, password)
 token <- auth_object$accessJwt
 refresh_tok <- auth_object$refreshJwt
+threshold    <- 40
 
 ##########################
 # BUILD RESEARCH NETWORK
@@ -26,11 +27,12 @@ research_bundle <- build_network(key_actor = key_actor,
                                  keywords = keywords,
                                  token = token,
                                  refresh_tok = refresh_tok,
-                                 threshold = 40,
+                                 threshold = threshold,
                                  save_net = TRUE,
                                  max_iterations = 30,
                                  sample_size = Inf,
-                                 file_name = net_file)
+                                 file_name = net_file,
+                                 prop = 1)
 
 # Save the result
 research_bundle$net      |> saveRDS(net_file)
@@ -50,7 +52,7 @@ research_bundle$widget   |> saveWidget(widget_file)
 # more followings and thus potential new members since last update?
 
 threshold    <- 40
-net_file     <- "data/research_net_2024-10-23.rds"
+net_file     <- "data/research_net_2024-10-31.rds"
 profile_file <- paste0("data/research_profiles_", Sys.Date(), ".csv")
 widget_file  <- paste0("data/research_widget_", Sys.Date(), ".html")
 keywords     <- read_lines(file = "data/research_keywords.txt")
@@ -82,10 +84,11 @@ profiles <- profiles |> add_metrics(net)
 freqs <- profiles$description |> word_freqs()
 
 # Create widget
-widget <- create_widget(net, profiles)
+widget <- create_widget(net, profiles, prop = 0.20)
 
 # Save the results
 net      |> saveRDS(net_file)
 profiles |> write.csv2(profile_file, row.names = FALSE)
 profiles |> saveRDS(str_replace(profile_file, "csv", "rds"))
 widget   |> saveWidget(widget_file)
+widget   |> saveRDS(str_replace(widget_file, "html", "rds"))

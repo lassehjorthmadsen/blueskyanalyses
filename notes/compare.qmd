@@ -23,7 +23,7 @@ theme_set(theme_minimal() +
 
 # What is this?
 
-This is a review of the latest update of the Bluesky Social Science and Research Network. We compare the current network with the previous one: How many new network members did we get; how many did we lose; what are some characteristics of the newcomers?
+This is a review of the latest update of the Bluesky Science and Research Network. We compare the current network with the previous one: How many new network members did we get; how many did we lose; what are some characteristics of the newcomers?
 
 
 ```{r get_data}
@@ -64,7 +64,7 @@ The current network, collected 2024-10-24, has `r nrow(new_pr)` members. The pre
 
 The net gain in members is thus `r nrow(new_pr) - nrow(old_pr)` which comes from `r sum(new_pr$newcomer == "Newcomer")` newcomers minus `r nrow(dplyr::anti_join(old_pr, new_pr, by = "did"))` users that are no longer member of the research network.
 
-The current net was was collected using a slightly different version of the algorithm, so it's possible that some of the changes was because of that. Lost and gained members can also be due to some leaving or joining Bluesky Social, changes in descriptions, or in the connections between members.
+The current net was was collected using a slightly different version of the algorithm, so it's possible that some of the changes was because of that. Lost and gained members can also be due to some leaving or joining Bluesky, changes in descriptions, or in the connections between members.
 
 # Newcomers
 
@@ -80,7 +80,7 @@ new_pr |>
   geom_col(position = "stack") +
   scale_x_date(date_labels = "%b\n%Y", date_breaks = "2 months") +
   geom_vline(xintercept = as.Date("2024-06-18"), color = "blue") +
-  labs(title = "Not all new network members are new on Bluesky Social",
+  labs(title = "Not all new network members are new on Bluesky",
        subtitle = "Count of members by profile creation month and whether newcomer or not.\nBlue line shows when the older network was generated",
        x = "Month of profile creation",
        fill = NULL)
@@ -99,7 +99,7 @@ We added a bunch of new keywords, among other things to include the climate scie
 old_keywords |> str_replace_all("\\|", ", ") |> paste0("**", . = _, "**") |> cat()
 ```
 
-Some keywords in the above list, like "academic", are rather generic. The list was generated based on a statistical analysis of what words scientists or researchers on Bluesky Social was likely to include in their description. For that reason words like "Michigan" also made it to the list -- and might be removed again. 
+Some keywords in the above list, like "academic", are rather generic. The list was generated based on a statistical analysis of what words scientists or researchers on Bluesky was likely to include in their description. For that reason words like "Michigan" also made it to the list -- and might be removed again. 
 
 ### The added keywords
 
