@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 data
+projects
 /.quarto/
 /_site/
