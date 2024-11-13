@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Lasse Hjorth Madsen">
+<meta name="dcterms.date" content="2024-11-13">
 
 <title>Scientists on Bluesky - Centrality Explained</title>
 <style>
@@ -81,7 +82,7 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -123,6 +124,10 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
     <a class="dropdown-item" href="../notes/algorithm.html">
  <span class="dropdown-text">How the Algorithm Works</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../notes/explainder.qmd">
+ <span class="dropdown-text">Centrality Explained</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -140,7 +145,19 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-is-this" id="toc-what-is-this" class="nav-link active" data-scroll-target="#what-is-this">What is this?</a></li>
+  <li><a href="#the-basic-idea" id="toc-the-basic-idea" class="nav-link" data-scroll-target="#the-basic-idea">The basic idea</a></li>
+  <li><a href="#toy-examples" id="toc-toy-examples" class="nav-link" data-scroll-target="#toy-examples">Toy examples</a></li>
+  <li><a href="#real-example" id="toc-real-example" class="nav-link" data-scroll-target="#real-example">Real example</a></li>
+  <li><a href="#science-research-network" id="toc-science-research-network" class="nav-link" data-scroll-target="#science-research-network">Science-research network</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -160,6 +177,12 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
           </div>
   </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 13, 2024</p>
+    </div>
+  </div>
   
     
   </div>
@@ -171,40 +194,155 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
 
 <section id="what-is-this" class="level1">
 <h1>What is this?</h1>
-<section id="graph-structures" class="level2">
-<h2 class="anchored" data-anchor-id="graph-structures">Graph structures</h2>
+<p>This is an explanation of how we rank members of the science and research network on Bluesky according to how influential they are.</p>
+<p>In network analysis for social networks, the concept of <em><a href="https://en.wikipedia.org/wiki/Centrality">centrality</a></em> is typically used in an attempt to quantify the influential capacity of actors. There are many competing ways to calculate centrality; the one we use is called <em><a href="https://en.wikipedia.org/wiki/Betweenness_centrality">betweenness centrality</a></em>.</p>
 </section>
-<section id="centrality-concepts" class="level2">
-<h2 class="anchored" data-anchor-id="centrality-concepts">Centrality concepts</h2>
-<section id="number-of-connections" class="level3">
-<h3 class="anchored" data-anchor-id="number-of-connections">Number of connections</h3>
+<section id="the-basic-idea" class="level1">
+<h1>The basic idea</h1>
+<p>Betweenness centrality is basically a count of how often a node (in this context an actor on Bluesky) is on the shortest path between two other nodes. The idea is, that this expresses the potential for passing along information in a network.</p>
+<p>Betweenness centrality is an alternative to perhaps the most obvious metric: The number of connections a given actor has, sometimes called <em>degree</em> centrality.</p>
+<p>Let’s look at few toy examples to develop an intuition for what this means.</p>
+</section>
+<section id="toy-examples" class="level1">
+<h1>Toy examples</h1>
+<p>The simplest possible network has just two actors with a single connection. (The term actor is used for users on Bluesky; in network or graph theory the term <em>node</em>, or <em>vertex</em> is often used. The connection is called an <em>edge</em>.)</p>
+<p>Such a network is trivially simple:</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="explainer_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="explainer_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="288"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Here, each actor, A and B, clearly are in equal positions. Each has exactly one connection; we don’t really need a calculation, but let’s do one anyway. Here’s the number of connections (or the degree centrality):</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 7 7 7 7 7 7 7</code></pre>
+<pre><code>A B 
+1 1 </code></pre>
 </div>
 </div>
+<p>Since A and B are the only two actors none of them are on the shortest path between any other actors, the betweenness centrality is zero:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>A B 
+0 0 </code></pre>
+</div>
+</div>
+<p>This changes if we create a slightly less trivial network with three actors, A, B, and C:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="288"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>B is now clearly in a more central position than the other two actors, having two connections rather than one:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>A B C 
+1 2 1 </code></pre>
+</div>
+</div>
+<p>And also a higher betweenness centrality from being on the shortest path between the other two:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>A B C 
+0 1 0 </code></pre>
+</div>
+</div>
+<p>You can think of this as B “controlling” the flow of information from A to C.</p>
+<p>In the simple example B wins out on centrality whether measured by number of connections or by betweenness centrality. But it doesn’t have to be like that; a bit more complicated network might look like this:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="480"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here, B and E have the most connections, 3 each:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>A B C D E F G 
+1 3 1 2 3 1 1 </code></pre>
+</div>
+</div>
+<p>But in terms of betweenness centrality, D is now equal to B and E, since all three are on the shortest path between 9 pairs of actors:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>A B C D E F G 
+0 9 0 9 9 0 0 </code></pre>
+</div>
+</div>
+<p>It works out like this: D connects A, B, C on one side, with F, E, G on the other side, for a total of 9 possible pairs.</p>
+<p>B connects A, C on one side, with D, E, F, G on the other (8 pairs) while also connecting A and C (1 additional pair). E is in an identical position to B, so is also on the shortest path between 9 pairs.</p>
 </section>
-<section id="betweenness-centrality" class="level3">
-<h3 class="anchored" data-anchor-id="betweenness-centrality">Betweenness centrality</h3>
+<section id="real-example" class="level1">
+<h1>Real example</h1>
+<p>For a slightly bigger, real-life network, this is the friendships between 34 members of a karate club. <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Visually it appears that members 1, 33 and 34 are particularly important members in this network. However, even in a relatively small example like this, we can no longer easily spot the number of connections, much less the betweenness centrality, so the computations are helpful.</p>
+<p>We can plot the two centrality measures from that network in a scatter plot:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>There is a rough relationship between number of connections (degree centrality) and betweenness centrality – you need <em>some</em> connections to have <em>good</em> connections – but it is not the same thing.</p>
+<p>For example, while member number 34 has the most friendships (same as most connections, and highest degree centrality) member number 1 has the highest betweenness centrality: She may be the one that is best at bringing different people together, and the best transmitter of information, since she is on the shortest path of most pairs of members.</p>
 </section>
-<section id="pagerank" class="level3">
-<h3 class="anchored" data-anchor-id="pagerank">PageRank</h3>
+<section id="science-research-network" class="level1">
+<h1>Science-research network</h1>
+<p>Finally, let’s do the same plot for our actual network of scientists and researchers on Bluesky. Currently, we have a total of 39030 members, so we get a dense swarm of dots. Also, the range of values spans many orders of magnitudes, so we use logarithmic axes.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Basically the same impression as in the karate club-network: The two metrics are clearly correlated, but they are not the same thing. The curve seems to level off – the few actors with extremely many connections does not quite have the same extreme betweenness centrality.</p>
+<p>Out of curiosity, let’s split the plot by the communities we detected. Community detection is basically smaller subsets of the network with a particular high density of connections. (Could be the topic for another note.) The communities are labeled by the three most frequent words from the profile description in each community. (We use <em>weighted</em> frequencies, the so-called and not so easy to remember <a href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf">“term frequency–inverse document frequency”</a>).</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="explainer_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Same general correlation seems to hold for all of our sub-networks or communities, so it seems likely this is a general property of betweenness centrality: It’s related to degree centrality, but not the same. You can think of betweenness centrality as a qualification of the more naive metric of just counting connections.</p>
 
 
 </section>
-</section>
-</section>
 
-</main> <!-- /main -->
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>The karate network data is included in the igraph R package and used in the documentation <a href="https://r.igraph.org/articles/igraph.html#creating-a-graph">here</a>, quoting this paper: W. W. Zachary, <em>An information flow model for conflict and fission in small groups</em>, Journal of Anthropological Research 33, 452-473 (1977).<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

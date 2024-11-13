@@ -18,14 +18,14 @@
     "href": "notes/explainer.html",
     "title": "Centrality Explained",
     "section": "",
-    "text": "[1] 7 7 7 7 7 7 7"
+    "text": "This is an explanation of how we rank members of the science and research network on Bluesky according to how influential they are.\nIn network analysis for social networks, the concept of centrality is typically used in an attempt to quantify the influential capacity of actors. There are many competing ways to calculate centrality; the one we use is called betweenness centrality."
   },
   {
-    "objectID": "notes/explainer.html#centrality-concepts",
-    "href": "notes/explainer.html#centrality-concepts",
+    "objectID": "notes/explainer.html#footnotes",
+    "href": "notes/explainer.html#footnotes",
     "title": "Centrality Explained",
-    "section": "",
-    "text": "[1] 7 7 7 7 7 7 7"
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nThe karate network data is included in the igraph R package and used in the documentation here, quoting this paper: W. W. Zachary, An information flow model for conflict and fission in small groups, Journal of Anthropological Research 33, 452-473 (1977).↩︎"
   },
   {
     "objectID": "notes/algorithm.html",
