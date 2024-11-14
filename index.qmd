@@ -22,4 +22,4 @@ After a number of iterations, we arrived at a science-oriented network of `r for
 
 Once the network is established, we can compute centrality measures, like [betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality) or [PageRank](https://en.wikipedia.org/wiki/PageRank) to identify members that may be particularly influential.
 
-Over at the list of [Influential Scientists](pages/big-list.qmd), we have a table with the top-100 members of the network, ranked by centrality. Feel free to explore the list, or play with the interactive [Network Visualisation](pages/big-plot.qmd).
+Over at the list of [Influential Members of the Science Community](pages/big-list.qmd), we have a table with the top-100 members of the network, ranked by centrality. Feel free to explore the list, or play with the interactive [Network Visualisation](pages/big-plot.qmd).

@@ -8,7 +8,7 @@ website:
       - href: index.qmd
         text: What is this?
       - href: pages/big-list.qmd
-        text: Influential Scientists 
+        text: Influential Members 
       - href: pages/big-plot.qmd
         text: Network Visualisation
       - text: Notebooks
