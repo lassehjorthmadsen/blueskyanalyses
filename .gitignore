@@ -5,4 +5,14 @@
 data
 projects
 /.quarto/
-/_site/notes/explainer_cache/
+/_site/notes/*_cache/
+notes/*_cache/
+*.rdb
+*.rdx
+*.RData
+
+*.RData
+notes/explainer_cache/
+*.rdb
+*.rdx
+*.RData

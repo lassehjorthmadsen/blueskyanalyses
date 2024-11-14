@@ -1,5 +1,5 @@
 ---
-title: "List of Influential Scientists"
+title: "Influential Members of the Science Community"
 format: html
 toc: false
 execute:

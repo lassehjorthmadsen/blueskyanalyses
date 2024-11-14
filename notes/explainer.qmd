@@ -1,6 +1,9 @@
 ---
 title: "Centrality Explained"
 author: "Lasse Hjorth Madsen"
+date: today
+format: html
+toc: true
 execute:
   echo: false
   warning: false
@@ -9,39 +12,222 @@ execute:
 
 ```{r set_up}
 library(tidyverse)
+library(ggrepel)
 library(igraph)
+library(quanteda)
+library(quanteda.textstats)
+theme_set(theme_minimal() + 
+            theme(axis.title.x = element_text(margin = margin(t = 10, r =  0, b = 0, l = 0)),
+                  axis.title.y = element_text(margin = margin(t =  0, r = 10, b = 0, l = 0))))
+options(scipen = 1e6)
+```
+
+```{r get_data}
+profiles <- readRDS("../data/research_profiles_2024-10-24.rds")
+net <- readRDS("../data/research_net_2024-10-31.rds")
 ```
 
 # What is this?
 
-## Graph structures
+This is an explanation of how we rank members of the science and research network on Bluesky according to how influential they are. 
 
-## Centrality concepts
+In network analysis for social networks, the concept of *[centrality](https://en.wikipedia.org/wiki/Centrality)* is typically used in an attempt to quantify the  influential capacity of actors. There are many competing ways to calculate centrality; the one we use is called *[betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality)*.  
 
-### Number of connections
+# The basic idea
+
+Betweenness centrality is basically a count of how often a node (in this context an actor on Bluesky) is on the shortest path between two other nodes. The idea is, that this expresses the potential for passing along information in a network. 
+
+Betweenness centrality is an alternative to perhaps the most obvious metric: The number of connections a given actor has, sometimes called *degree* centrality.
+
+Let's look at few toy examples to develop an intuition for what this means.
+
+# Toy examples
+
+The simplest possible network has just two actors with a single connection. (The term actor is used for users on Bluesky; in network or graph theory the term *node*, or *vertex* is often used. The connection is called an *edge*.)
+
+Such a network is trivially simple:
 
 ```{r}
-g <- make_graph(edges = c(1, 2, 1, 3, 1, 4, 1, 5, 1, 6, 1, 7, 1, 8), n = 8, directed = FALSE)
-V(g)$color <- c("lightblue", rep("lightgreen", 7))
-V(g)$size <- c(50, rep(30, 7))
-V(g)$label <- c("Sue", rep(NA, 7))
-V(g)$label.cex <- 1.1
-V(g)$label.color <- "black"
+#| fig-height: 1
+#| fig-width: 3
+par(mar = c(0, 0, 0, 0)) 
+g <- sample_grg(2, 1)
+V(g)$color <- "lightblue"
+V(g)$label <- LETTERS[1:2]
+V(g)$name <-  LETTERS[1:2]
+V(g)$size = 100
 V(g)$frame.color <- NA
-V(g)$label.family <- "sans"
-
-V(g)$border <- NA
-
-plot(g, layout = layout_nicely, main = "One member with many connections")
+plot(g)
 ```
+Here, each actor, A and B, clearly are in equal positions. Each has exactly one connection; we don't really need a calculation, but let's do one anyway. Here's the number of connections (or the degree centrality): 
 
 ```{r}
-edge_betweenness(g)
+degree(g)
+```
+Since A and B are the only two actors none of them are on the shortest path between any other actors,  the betweenness centrality is zero:
+
+```{r}
+betweenness(g)
+```
+This changes if we create a slightly less trivial network with three actors, A, B, and C:
+
+```{r}
+#| fig-height: 1
+#| fig-width: 3
+par(mar = c(0, 0, 0, 0)) 
+g <-  make_graph(edges = c(1, 2, 2, 3), n = 3, directed = FALSE)
+
+V(g)$color <- "lightblue"
+V(g)$label <- LETTERS[1:3]
+V(g)$name <-  LETTERS[1:3]
+V(g)$frame.color <- NA
+V(g)$size = 100
+plot(g)
+```
+ B is now clearly in a more central position than the other two actors, having two connections rather than one:
+
+```{r}
+degree(g)
+```
+And also a higher betweenness centrality from being on the shortest path between the other two:
+
+```{r}
+betweenness(g)
+```
+You can think of this as B "controlling" the flow of information from A to C.
+
+In the simple example B wins out on centrality whether measured by number of connections or by betweenness centrality. But it doesn't have to be like that; a  bit more complicated network might look like this:
+
+```{r}
+#| fig-height: 2
+#| fig-width: 5
+par(mar = c(0, 0, 0, 0)) 
+g <-  make_graph(edges = c(1, 2, 2, 3, 2, 4, 4, 5, 5, 6, 5, 7), n = 7, directed = FALSE)
+
+V(g)$color <- "lightblue"
+V(g)$label <- LETTERS[1:7]
+V(g)$name <-  LETTERS[1:7]
+V(g)$frame.color <- NA
+V(g)$size = 40
+plot(g)
+```
+Here, B and E have the most connections, 3 each:
+
+```{r}
+degree(g)
+```
+But in terms of betweenness centrality, D is now equal to B and E, since all three are on the shortest path between 9 pairs of actors: 
+
+```{r}
+betweenness(g)
+```
+
+It works out like this: D connects A, B, C on one side, with F, E, G on the other side, for a total of 9 possible pairs. 
+
+B connects A, C on one side, with D, E, F, G on the other (8 pairs) while also connecting A and C (1 additional pair). E is in an identical position to B, so is also on the shortest path between 9 pairs.
+
+# Real example
+
+For a slightly bigger, real-life network, this is the friendships between 34 members of a karate club. ^[The karate network data is included in the igraph R package and used in the documentation [here](https://r.igraph.org/articles/igraph.html#creating-a-graph), quoting this paper: W. W. Zachary, *An information flow model for conflict and fission in small groups*, Journal of Anthropological Research 33, 452-473 (1977).]
+
+```{r}
+#| fig-height: 4
+#| fig-width: 6
+par(mar = c(0, 0, 0, 0)) 
+g <- make_graph("Zachary")
+
+V(g)$color <- "lightblue"
+V(g)$label <- 1:34
+V(g)$name <-  1:34
+V(g)$frame.color <- NA
+V(g)$size = 15
+plot(g)
+```
+Visually it appears that members 1, 33 and 34 are particularly important members in this network. However, even in a relatively small example like this, we can no longer easily spot the number of connections, much less the betweenness centrality, so the computations are helpful.
+
+We can plot the two centrality measures from that network in a scatter plot:
+
+```{r}
+tibble(degree = degree(g), betweenness = betweenness(g)) |> 
+  mutate(id = row_number()) |> 
+  ggplot(aes(x = degree, y = betweenness, label = id)) +
+  geom_smooth(color = "wheat3", alpha = 0.2)  +
+  geom_point(size = 4, color = "lightblue") +
+  geom_text_repel(segment.color = "darkgray", color = "darkgray", size = 3) +
+  theme_minimal() +
+  labs(title = "Centrality metrics for a karate club",
+       x = "Degree centrality",
+       y = "Betweenness centrality")
+  
+```
+
+There is a rough relationship between number of connections (degree centrality) and betweenness centrality -- you need *some* connections to have *good* connections -- but it is not the same thing. 
+
+
+For example, while member number 34 has the most friendships (same as most connections, and  highest degree centrality) member number 1 has the highest betweenness centrality: She may be the one that is best at bringing different people together, and the best transmitter of information, since she is on the shortest path of most pairs of members.
+
+# Science-research network
+
+Finally, let's do the same plot for our actual network of scientists and researchers on Bluesky. Currently, we have a total of `r nrow(profiles)` members, so we get a dense swarm of dots. Also, the range of values spans many orders of magnitudes, so we use logarithmic axes. 
+
+```{r}
+# Get the total number of edges (since this network is not directed)
+total_edges <- c(net$actor_handle, net$follows_handle) |> 
+  tibble(handle = _) |> 
+  count(handle, name = "total_edges")
+
+# Get the top 3 words (tf-idf-weighted) per community, use as labels
+top_words <- corpus(profiles, text_field = "description", docid_field = "handle") |>
+  tokens(remove_punct = TRUE) |>
+  tokens_remove(pattern = c(stopwords("en"), "|")) |>
+  dfm() |> 
+  dfm_tfidf() |> 
+  topfeatures(n = 3, groups = community) |> 
+  map(names) |> 
+  map_chr(paste, collapse = " | ") |> 
+  as_tibble() |> 
+  mutate(community = row_number()) |> 
+  rename(community_label = value)
+
+profiles <- profiles |> 
+  left_join(total_edges, by = "handle") |> 
+  left_join(top_words, by = "community")
 ```
 
 
+```{r}
+profiles |> 
+  ggplot(aes(x = total_edges, y = centrality)) +
+  geom_jitter(alpha = 0.1) +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth() +
+  labs(title = "Centrality metrics for the science and research network",
+       x = "Degree centrality (log-scale)",
+       y = "Betweenness centrality (log-scale)") +
+  theme_minimal()
+```
 
-### Betweenness centrality
+Basically the same impression as in the karate club-network: The two metrics are clearly correlated, but they are not the same thing. The curve seems to level off -- the few actors with extremely many connections does not quite have the same extreme betweenness centrality.
 
-### PageRank
+Out of curiosity, let's split the plot by the communities we detected. Community detection is basically smaller subsets of the network with a particular high density of connections. (Could be the topic for another note.) The communities are labeled by the three most frequent words from the profile description in each community. (We use *weighted* frequencies, the so-called and not so easy to remember ["term frequency–inverse document frequency"](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)).
 
+```{r}
+#| fig-height: 7
+#| 
+profiles |> 
+  mutate(community_label = str_wrap(community_label, 20)) |> 
+  ggplot(aes(x = total_edges, y = centrality, color = community_label)) +
+  geom_jitter(alpha = 0.1, show.legend = FALSE) +
+  scale_x_log10(labels = NULL) +
+  scale_y_log10(labels = NULL) +
+  geom_smooth(show.legend = FALSE) +
+  facet_wrap(facets = vars(community_label)) +
+  labs(title = "Centrality metrics for the science and research network",
+       subtitle = "Split by detected communities (described by top-keywords)",
+       x = "Degree centrality (log-scale)",
+       y = "Betweenness centrality (log-scale)") +
+  theme_minimal() 
+```
+
+Same general correlation seems to hold for all of our sub-networks or communities, so it seems likely this is a general property of betweenness centrality: It's related to degree centrality, but not the same. You can think of betweenness centrality as a qualification of the more naive metric of just counting connections.

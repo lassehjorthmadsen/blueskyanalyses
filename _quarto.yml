@@ -17,6 +17,8 @@ website:
           text: Compare Networks
         - href: notes/algorithm.qmd
           text: How the Algorithm Works
+        - href: notes/explainer.qmd
+          text: Centrality Explained
       - href: about.qmd
         text: About
 
