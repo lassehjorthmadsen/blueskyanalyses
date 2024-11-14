@@ -10,9 +10,3 @@ notes/*_cache/
 *.rdb
 *.rdx
 *.RData
-
-*.RData
-notes/explainer_cache/
-*.rdb
-*.rdx
-*.RData
