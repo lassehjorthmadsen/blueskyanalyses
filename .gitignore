@@ -4,9 +4,10 @@
 .Ruserdata
 data
 projects
-/.quarto/
-/_site/notes/*_cache/
+_site/
+.quarto/
 notes/*_cache/
 *.rdb
 *.rdx
 *.RData
+
