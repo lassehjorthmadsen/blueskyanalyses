@@ -11,3 +11,4 @@ notes/*_cache/
 *.rdx
 *.RData
 
+/.quarto/

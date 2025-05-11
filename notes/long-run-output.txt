@@ -1,0 +1,166 @@
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+Initial network:
+   Number of actors     : 1
+   Number of follows    : 4149
+   Number of connections: 4149
+
+Expanding the network, iteration number: 1
+   Number of prospects meeting the followers threshold of 40: 4148
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 3528
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2245
+
+Updated network:
+   Number of actors     : 2246
+   Number of follows    : 495875
+   Number of connections: 2562201
+
+Time difference of 2.066851 hours
+
+Expanding the network, iteration number: 2
+   Number of prospects meeting the followers threshold of 40: 10063
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 7694
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 1822
+
+Updated network:
+   Number of actors     : 4068
+   Number of follows    : 719183
+   Number of connections: 5075777
+
+Time difference of 2.467354 hours
+
+Expanding the network, iteration number: 3
+   Number of prospects meeting the followers threshold of 40: 21659
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 16101
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 1944
+
+Updated network:
+   Number of actors     : 6012
+   Number of follows    : 950092
+   Number of connections: 7622092
+
+Time difference of 3.034004 hours
+
+Expanding the network, iteration number: 4
+   Number of prospects meeting the followers threshold of 40: 30664
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 21907
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 1990
+
+Updated network:
+   Number of actors     : 8002
+   Number of follows    : 1168113
+   Number of connections: 10254793
+
+Time difference of 3.41239 hours
+
+Expanding the network, iteration number: 5
+   Number of prospects meeting the followers threshold of 40: 39563
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 27530
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 1530
+
+Updated network:
+   Number of actors     : 9532
+   Number of follows    : 1542540
+   Number of connections: 12885971
+
+Time difference of 3.871151 hours
+
+Expanding the network, iteration number: 6
+   Number of prospects meeting the followers threshold of 40: 46412
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 31400
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2307
+
+Updated network:
+   Number of actors     : 11839
+   Number of follows    : 1665064
+   Number of connections: 15497018
+
+Time difference of 4.008213 hours
+
+Expanding the network, iteration number: 7
+   Number of prospects meeting the followers threshold of 40: 53841
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 35343
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2681
+
+Updated network:
+   Number of actors     : 14520
+   Number of follows    : 1757259
+   Number of connections: 18158590
+
+Time difference of 4.348331 hours
+
+Expanding the network, iteration number: 8
+   Number of prospects meeting the followers threshold of 40: 61539
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 39251
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2813
+
+Updated network:
+   Number of actors     : 17333
+   Number of follows    : 1805579
+   Number of connections: 20649388
+
+Time difference of 4.581201 hours
+
+Expanding the network, iteration number: 9
+   Number of prospects meeting the followers threshold of 40: 68297
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 42228
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2514
+
+Updated network:
+   Number of actors     : 19847
+   Number of follows    : 1880854
+   Number of connections: 23216457
+
+Time difference of 4.756973 hours
+
+Expanding the network, iteration number: 10
+   Number of prospects meeting the followers threshold of 40: 74977
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 44806
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 2586
+
+Updated network:
+   Number of actors     : 22433
+   Number of follows    : 2045248
+   Number of connections: 25818519
+
+Time difference of 4.952174 hours
+
+Expanding the network, iteration number: 11
+   Number of prospects meeting the followers threshold of 40: 82108
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 47364
+   Getting follows  ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% | ETA:  0s
+   Number of new actors with followers to add to network: 1561
+
+Updated network:
+   Number of actors     : 23994
+   Number of follows    : 2110453
+   Number of connections: 27307097
+
+Time difference of 4.754154 hours
+
+Expanding the network, iteration number: 12
+   Number of prospects meeting the followers threshold of 40: 86127
+   Getting profiles ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■  100% |  ETA:  0s
+   Number of valid prospects also matching the provided keywords: 48548
+There were 50 or more warnings (use warnings() to see the first 50)h
+   Getting follows  ■■■■■■■■                          24% | ETA:  8h

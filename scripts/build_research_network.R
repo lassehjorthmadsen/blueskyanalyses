@@ -4,12 +4,13 @@ library(tidyverse)
 library(htmlwidgets)
 devtools::load_all("../blueskynet")
 
-password <- Sys.getenv("BLUESKY_APP_PASS")
-identifier <- Sys.getenv("BLUESKY_APP_USER")
-auth_object <- get_token(identifier, password)
-token <- auth_object$accessJwt
-refresh_tok <- auth_object$refreshJwt
-threshold    <- 40
+password       <- Sys.getenv("BLUESKY_APP_PASS")
+identifier     <- Sys.getenv("BLUESKY_APP_USER")
+auth_object    <- get_token(identifier, password)
+token          <- auth_object$accessJwt
+refresh_tok    <- auth_object$refreshJwt
+threshold      <- 0.01 
+max_iterations <- 100
 
 ##########################
 # BUILD RESEARCH NETWORK
@@ -29,7 +30,7 @@ research_bundle <- build_network(key_actor = key_actor,
                                  refresh_tok = refresh_tok,
                                  threshold = threshold,
                                  save_net = TRUE,
-                                 max_iterations = 30,
+                                 max_iterations = max_iterations,
                                  sample_size = Inf,
                                  file_name = net_file,
                                  prop = 1)

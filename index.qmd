@@ -7,7 +7,7 @@ format: html
 
 ```{r load}
 #| echo: false
-profiles <- readRDS("data/research_profiles_2024-10-24.rds")
+profiles <- read.csv("data/research_profiles_2025-05-09.csv", sep = ";")
 ```
 
 We've built a network of scientists and researchers active on Bluesky. The goal is to better understand how this group of users interact on the platform.
