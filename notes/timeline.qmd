@@ -1,0 +1,106 @@
+---
+title: "Most recent network: What changed?"
+author: "Lasse Hjorth Madsen"
+date: today
+format: html
+toc: true
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+```{r setup, cache=FALSE}
+#|cache: false
+library(tidyverse)
+library(igraph)
+library(DT)
+theme_set(theme_minimal())
+```
+
+# What is this?
+
+This is a quick look at the most recent network of scientists and researchers on Bluesky compared to earlier versions. Changes between versions may be due to either structural changes in the science and research community on Bluesky, *or* changes we have to make in the algorithm, as we go along.
+
+Eventually, we aim the use the exact same algorithm every time to more accurately spot actual network changes, but it does take a bit of fine tuning before we get there. 
+
+```{r get_data}
+net_files <- c("../data/research_net_2025-05-09.rds",
+               "../data/research_net_2024-10-23.rds",
+               "../data/research_clean_net_2024-06-18.rds")
+
+net_dates <- net_files |> str_extract("\\d{4}-\\d{2}-\\d{2}")
+
+nets <- net_files |> set_names(net_dates) |>  map(readRDS)
+```
+
+# Metrics
+
+The table below shows a few basic metrics from the big science and researchers networks we collected at some point in time.
+
+```{r graphs}
+graphs <- nets |> map(graph_from_data_frame)
+```
+
+```{r metrics}
+net_metrics <- 
+  tibble(.rows = length(nets)) |> 
+  mutate(Date = names(nets),
+         Members = map_int(nets, \(x) n_distinct(x$actor_handle)),
+         Edges = map_int(nets, nrow),
+         Density = map_dbl(graphs, \(x) edge_density(x, loops = TRUE))
+         )
+
+net_metrics |> 
+  datatable(rownames = FALSE, options = list(dom = "t")) |> 
+  formatRound(columns = "Density", digits = 4)
+```
+\
+As we can see, the numbers of members in the latest network is considerably lower than earlier versions. 
+
+This is not because the community got smaller -- on the contrary it grew to the point where we had to be more restrictive in defining the network border: Earlier we had an *absolute* threshold of 30, i.e. you needed 30 followers from within the network to be included. This time around we changed that to a *relative* threshold of 1 percent; you need to be followed by 1 percent of the network to be considered part of the network.
+
+One percent of 17,980 is 180 followers, so clearly that is a significantly higher bar.
+
+The reason for the change was both pragmatic and analytical: We had to be more restrictive or the algorithm would never finish. It may also make more sense with a relative threshold, since 100 followers is more significant in a network of 500 than in a network of 5,000. The *percentage* matter.
+
+We see that the total number of edges (connections) is higher now that earlier. In other words: We have fewer members, but they *follow* more members.
+
+The *density* of the network is the ratio of actual connections to the maximum possible connections. Naturally, that metrics is also up by quite a bit: The current network is much more densely connected than earlier versions.
+ 
+The type network we construced is know as a *directed* graph (following someone is different from being followed). *Loops* are possible (you can follow yourself). So the maximum possible edges is just $n^2$, where $n$ is the number of members or *nodes*. The *density*, then, is $\frac{e}{n^2}$ where $e$ is the actual number of edges or connections in the graph.   
+
+# Plot
+
+Let's plot the distribution of follow*ers* and follow*s*, both in absolute counts and in relative terms:
+
+```{r thresholds}
+follows <- nets |> 
+  map_dfr(\(x) x, .id = "Date") |>
+  count(Date, actor_handle) |>
+  group_by(Date) |> 
+  mutate(Percent = 100 * n / n()) |> 
+  ungroup() |> 
+  mutate(metric = "follows") |> 
+  pivot_longer(c(n, Percent))
+
+followers <- nets |> 
+  map_dfr(\(x) x, .id = "Date") |> 
+  count(Date, follows_handle) |>
+  group_by(Date) |> 
+  mutate(Percent = 100 * n / n()) |> 
+  ungroup() |> 
+  mutate(metric = "followers") |> 
+  pivot_longer(c(n, Percent))  
+
+fol <- bind_rows(follows, followers)
+```
+
+```{r plot}
+fol |> 
+  ggplot(aes(x = Date, y = value)) +
+  geom_boxplot(outliers = FALSE) +
+  facet_grid(rows = vars(name), cols = vars(metric), scales = "free")
+```
+\
+We see basically the same thing; the denser network means members have a higher median number of follower*s* and are also follow*ing* more. Both in absolute and relative terms.

@@ -7,7 +7,7 @@ format: html
 
 ```{r load}
 #| echo: false
-profiles <- read.csv("data/research_profiles_2025-05-09.csv", sep = ";")
+net <- readRDS("data/research_net_2025-05-09.rds")
 ```
 
 We've built a network of scientists and researchers active on Bluesky. The goal is to better understand how this group of users interact on the platform.
@@ -18,7 +18,7 @@ The network is built using an iterative algorithm that works like this: We start
 
   - have a bio description that indicates an affiliation with, or strong interest in, the scientific community
   
-After a number of iterations, we arrived at a science-oriented network of `r format(nrow(profiles), big.mark = ",")` members (or 'actors') on Bluesky. Many, but not all, do research at a research institution. A few are science writers, independent researchers, or work at private organisations.
+After a number of iterations, we arrived at a science-oriented network of `r format(length(unique(net$actor_handle)), big.mark = ",")` members (or 'actors') on Bluesky. Many, but not all, do research at a research institution. A few are science writers, independent researchers, or work at private organisations.
 
 Once the network is established, we can compute centrality measures, like [betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality) or [PageRank](https://en.wikipedia.org/wiki/PageRank) to identify members that may be particularly influential.
 

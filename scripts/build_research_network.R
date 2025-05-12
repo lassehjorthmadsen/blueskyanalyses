@@ -16,11 +16,12 @@ max_iterations <- 100
 # BUILD RESEARCH NETWORK
 ##########################
 
-keywords_file <- "data/research_keywords.txt"
-key_actor     <- "rossdahlke.bsky.social"
-net_file      <- paste0("data/research_net_", Sys.Date(), ".rds")
-profile_file  <- paste0("data/research_profiles_", Sys.Date(), ".csv")
-widget_file   <- paste0("data/research_widget_", Sys.Date(), ".html")
+keywords_file   <- "data/research_keywords.txt"
+key_actor       <- "rossdahlke.bsky.social"
+net_file        <- paste0("data/research_net_", Sys.Date(), ".rds")
+profile_file    <- paste0("data/research_profiles_", Sys.Date(), ".csv")
+widget_file     <- paste0("data/research_widget_", Sys.Date(), ".html")
+widget_file_rds <- str_replace(widget_file, ".html", ".rds")
 
 keywords <- read_lines(file = keywords_file)
 
@@ -37,9 +38,9 @@ research_bundle <- build_network(key_actor = key_actor,
 
 # Save the result
 research_bundle$net      |> saveRDS(net_file)
-research_bundle$profiles |> write.csv2(profile_file, row.names = FALSE)
+research_bundle$profiles |> write.csv(profile_file, row.names = FALSE)
 research_bundle$widget   |> saveWidget(widget_file)
-
+research_bundle$widget   |> saveRDS(widget_file_rds)
 
 ###########################
 # RE-BUILD RESEARCH NETWORK

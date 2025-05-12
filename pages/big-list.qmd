@@ -3,8 +3,8 @@ title: "Influential Members of the Science Community"
 format: html
 toc: false
 execute:
-  echo: false
   warning: false
+  echo: false
   cache: true
 ---
 
@@ -15,7 +15,7 @@ library(DT)
 ```
 
 ```{r load}
-profiles <- readRDS("../data/research_profiles_2024-10-24.rds")
+profiles <- read.csv("../data/research_profiles_2025-05-09.csv")
 ```
 
 The list is sortable, searchable, and playable. Have fun.
@@ -30,6 +30,6 @@ top <- profiles |>
   mutate(across(centrality, \(x) round(x, digits = 0)))
 
 top |> select(handle, displayName, description, centrality) |> 
-  datatable(rownames= FALSE)
+  datatable(rownames = FALSE)
 ```
 

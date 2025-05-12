@@ -1,5 +1,7 @@
 project:
   type: website
+  render:
+    - "!scripts/"
 
 website:
   title: "Scientists on Bluesky"
@@ -13,10 +15,12 @@ website:
         text: Network Visualisation
       - text: Notebooks
         menu:
-        - href: notes/compare.qmd
-          text: Compare Networks
+        - href: notes/timeline.qmd
+          text: Most recent network
         - href: notes/algorithm.qmd
           text: How the Algorithm Works
+        - href: notes/compare.qmd
+          text: Compare Networks
         - href: notes/explainer.qmd
           text: Centrality Explained
       - href: about.qmd

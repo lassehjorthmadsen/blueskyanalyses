@@ -23,7 +23,9 @@ theme_set(theme_minimal() +
 
 # What is this?
 
-This is a review of the latest update of the Bluesky Science and Research Network. We compare the current network with the previous one: How many new network members did we get; how many did we lose; what are some characteristics of the newcomers?
+This is a deep dive where we compare an early version of the Bluesky Science and Research Network with the next update. The purpose is to better understand how the two networks differ: How many new network members did we get in this update; how many did we lose; what are some characteristics of the newcomers?
+
+Since this note, the network was updated again, so here the 'updated' version is not the *current* version. 
 
 
 ```{r get_data}
@@ -60,7 +62,7 @@ both_nets <- new_net |>
 
 # Counts
 
-The current network, collected 2024-10-24, has `r nrow(new_pr)` members. The previous one, collected 2024-06-18, had `r nrow(old_pr)` members.
+The updated network, collected 2024-10-24, has `r nrow(new_pr)` members. The previous one, collected 2024-06-18, had `r nrow(old_pr)` members.
 
 The net gain in members is thus `r nrow(new_pr) - nrow(old_pr)` which comes from `r sum(new_pr$newcomer == "Newcomer")` newcomers minus `r nrow(dplyr::anti_join(old_pr, new_pr, by = "did"))` users that are no longer member of the research network.
 
