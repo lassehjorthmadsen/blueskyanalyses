@@ -1,5 +1,10 @@
 project:
   type: website
+  render:
+    - about.qmd
+    - index.qmd
+    - notes/
+    - pages/
 
 website:
   title: "Scientists on Bluesky"
