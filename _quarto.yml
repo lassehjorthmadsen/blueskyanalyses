@@ -1,7 +1,5 @@
 project:
   type: website
-  render:
-    - "!scripts/"
 
 website:
   title: "Scientists on Bluesky"
