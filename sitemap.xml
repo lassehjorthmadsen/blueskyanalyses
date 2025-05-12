@@ -1,55 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/scripts/examine_partial_net.html</loc>
-    <lastmod>2025-05-11T10:15:04.466Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/projects/edith-western/edit_cowan_plots.html</loc>
-    <lastmod>2024-12-19T07:29:33.550Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/pages/big-list.html</loc>
-    <lastmod>2025-05-11T21:00:17.535Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/notes.html</loc>
-    <lastmod>2024-11-14T10:50:54.730Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/explainer.html</loc>
-    <lastmod>2024-11-14T10:50:54.489Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/algorithm.html</loc>
-    <lastmod>2024-11-14T10:50:53.812Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/about.html</loc>
-    <lastmod>2024-11-14T10:50:53.754Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/index.html</loc>
-    <lastmod>2025-05-11T21:04:09.449Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/compare.html</loc>
-    <lastmod>2025-05-11T19:01:10.664Z</lastmod>
-  </url>
-  <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/keywords.html</loc>
-    <lastmod>2024-11-14T10:50:54.516Z</lastmod>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/pages/big-plot.html</loc>
+    <lastmod>2025-05-11T12:50:42.463Z</lastmod>
   </url>
   <url>
     <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/timeline.html</loc>
     <lastmod>2025-05-12T19:21:46.384Z</lastmod>
   </url>
   <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/pages/big-plot.html</loc>
-    <lastmod>2025-05-11T12:50:42.463Z</lastmod>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/keywords.html</loc>
+    <lastmod>2024-11-14T10:50:54.516Z</lastmod>
   </url>
   <url>
-    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/projects/edith-western/western_sydney_plots.html</loc>
-    <lastmod>2024-12-19T07:45:02.218Z</lastmod>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/compare.html</loc>
+    <lastmod>2025-05-11T19:01:10.664Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/index.html</loc>
+    <lastmod>2025-05-11T21:04:09.449Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/about.html</loc>
+    <lastmod>2024-11-14T10:50:53.754Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/algorithm.html</loc>
+    <lastmod>2024-11-14T10:50:53.812Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/explainer.html</loc>
+    <lastmod>2024-11-14T10:50:54.489Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/notes/notes.html</loc>
+    <lastmod>2024-11-14T10:50:54.730Z</lastmod>
+  </url>
+  <url>
+    <loc>https://lassehjorthmadsen.github.io/blueskyanalyses/pages/big-list.html</loc>
+    <lastmod>2025-05-11T21:00:17.535Z</lastmod>
   </url>
 </urlset>
