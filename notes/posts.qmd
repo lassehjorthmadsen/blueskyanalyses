@@ -1,0 +1,76 @@
+---
+title: "Quick look at posts from top network members"
+author: "Lasse Hjorth Madsen"
+date: today
+format: html
+toc: true
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+```{r setup, cache=FALSE}
+#|cache: false
+library(tidyverse)
+library(DT)
+library(httr2)
+devtools::load_all("../../blueskynet/")
+
+posts_file <- paste0("../data/top_posts", ".csv")
+# posts_file <- paste0("../data/top_posts_", Sys.Date(), ".csv")
+```
+
+# What is this?
+
+This is a quick look at posts from the currently top-10 most influential members in our science and research network.
+
+```{r get_data}
+profiles <- read.csv("../data/research_profiles_2025-05-09.csv")
+```
+
+# Top 10
+
+```{r top10}
+top <- profiles |> 
+  slice_max(order_by = centrality, n = 10, with_ties = FALSE) |> 
+  mutate(across(centrality, \(x) round(x, digits = 0)))
+
+top |> select(handle, displayName, description) |> 
+  datatable(rownames = FALSE)
+```
+
+```{r authenticate}
+password <- Sys.getenv("BLUESKY_APP_PASS")
+identifier <- "lassehjorthmadsen.bsky.social"
+auth_object <- get_token(identifier, password)
+token <- auth_object$accessJwt
+my_did <- auth_object$did
+```
+
+```{r get_posts}
+#| cache: true
+
+if (!file.exists(posts_file)) {
+  posts <- get_user_posts(top$did[1], 
+                          token, 
+                          filter = "posts_no_replies", 
+                          limit = 10)
+    # limit parameter does not work as expected; investigate
+  posts |> write_csv(posts_file)
+} else {
+  posts <- read_csv(posts_file, show_col_types = FALSE)
+}
+```
+
+# Examine posts by top members
+
+```{r examine}
+#| column: screen
+posts |> 
+  #filter(!is_repost) |> 
+  mutate(created_at = as.Date(created_at)) |> 
+  select(-uri, -cid, -author_did) |> 
+  datatable(rownames = FALSE, filter = 'top')
+```
+
