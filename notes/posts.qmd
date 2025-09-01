@@ -1,8 +1,12 @@
 ---
-title: "Quick look at posts from top network members"
+title: "The anatomy of a great post"
+subtitle: "Exploring top posts from top network members"
 author: "Lasse Hjorth Madsen"
 date: today
-format: html
+format:
+  html:
+    embed-resources: true
+    df-print: paged
 toc: true
 execute:
   echo: false
@@ -13,64 +17,258 @@ execute:
 ```{r setup, cache=FALSE}
 #|cache: false
 library(tidyverse)
+library(ggridges)
 library(DT)
-library(httr2)
-devtools::load_all("../../blueskynet/")
 
-posts_file <- paste0("../data/top_posts", ".csv")
-# posts_file <- paste0("../data/top_posts_", Sys.Date(), ".csv")
+theme_set(theme_minimal() + 
+            theme(axis.title.x = element_text(margin = margin(t = 10, r =  0, b = 0, l = 0)),
+                  axis.title.y = element_text(margin = margin(t =  0, r = 10, b = 0, l = 0))))
+
+options(scipen = 1e6)
 ```
+
+```{r get_data}
+profiles_date <- as.Date("2025-05-09")
+posts_date <- as.Date("2025-08-21")
+
+profiles <- read_csv(paste0("../data/research_profiles_", profiles_date, ".csv"), show_col_types = FALSE)
+posts <- read_csv(paste0("../data/top_posts_", posts_date, ".csv"), show_col_types = FALSE)
+posts_cats <- read_csv(paste0("../data/top_posts_cat_", posts_date, ".csv"), show_col_types = FALSE)
+
+# Clean
+posts_cats <- posts_cats |> 
+  distinct(.keep_all = T) |> # In case of duplicates 
+  select(-id, -chunk_id)
+
+# Get display names and category labels
+posts <- posts |> 
+  left_join(select(profiles, did, displayName), by = c("actor" = "did")) |> 
+  left_join(posts_cats, by = "text") |>  
+  mutate(category = fct_rev(fct_infreq(category)))
+```
+
 
 # What is this?
 
-This is a quick look at posts from the currently top-10 most influential members in our science and research network.
+This is an exploratory look at posts from the most influential members in our science and research network. In particular, we look at examples of posts generating an extraordinary amount of engagement, but also statistics on the topic of posts and posting activity.
 
-```{r get_data}
-profiles <- read.csv("../data/research_profiles_2025-05-09.csv")
+# The data
+
+We look at a total of `r nrow(posts)` posts from the top 200 influential members of the network, using the network update from `r profiles_date`. We collected the posts at `r posts_date`. 
+
+(Find the current list of influential members [here](../pages/big-list.qmd), and a more detailed explanation of the 'betweenness centrality' metric we use to measure influence [here](explainer.qmd).)
+
+
+# And the winner is ...
+
+```{r}
+top_likes <- posts |> filter(!is_repost) |> slice_max(like_count, with_ties = FALSE)
 ```
 
-# Top 10
+To get started, lets just have a quick look at the most liked post in our data set, that is *not* a repost:
 
-```{r top10}
-top <- profiles |> 
-  slice_max(order_by = centrality, n = 10, with_ties = FALSE) |> 
-  mutate(across(centrality, \(x) round(x, digits = 0)))
+> `r top_likes$text`
 
-top |> select(handle, displayName, description) |> 
-  datatable(rownames = FALSE)
+This was posted on `r as.Date(top_likes$created_at)` by user **`r top_likes$author_handle`**, with the display name: **`r top_likes$author_displayName`**. That user has description:
+
+> `r  profiles |> filter(did == top_likes$author_did) |> pull(description)`.
+
+# More winners
+
+The top-20 original posts (not reposts) by number of likes is here:
+
+```{r top20}
+posts |> 
+  filter(!is_repost) |> 
+  slice_max(like_count, n = 20, with_ties = FALSE) |> 
+  select(Author = author_displayName, Post = text, Likes = like_count) |> 
+  datatable(rownames = FALSE, options = list(dom = 'tp', pageLength = 5))
+```
+\
+Note that it is not close between the first and second place; that top one really went viral.
+
+If we look at *reposts*, the top-20 (by number of likes) looks like this:
+
+```{r top20_reposts}
+posts |> 
+  filter(is_repost) |> 
+  slice_max(like_count, n = 20, with_ties = FALSE) |> 
+  select(Author = author_displayName, Reposter = displayName, Post = text, Likes = like_count) |> 
+  datatable(rownames = FALSE, options = list(dom = 'tp', pageLength = 5))
+```
+\
+Clearly, the most liked posts and reposts are often about political issues, mostly in the US, often with a strong emotional tone of outrage or protest, not unlike a typical 'letter to the editor' in a Newspaper. Let's investigate the topics posted about a bit further.
+
+# Most popular topics
+
+Categorizing topics of social media posts is a perfect task for a large language model, aka a chatbot. We used a script to query Google's 'Gemini 2.5 flash' model with a sample of posts, and get back descriptive topic labels. We did an random sample of 3,000 post, to not exhaust the token limit. Again no reposts, as those can be hard to label without the original post.
+
+By inspection, the labels that Gemini came up with, looked very reasonable. Below we provide a lot of examples so anyone can confirm (or reject) that impression. 
+
+First, counting the topics, we see that politics is indeed a popular subject in this subset of  posts from influential network members:
+
+```{r}
+posts |> 
+  filter(!is.na(category)) |> 
+  mutate(fill = category == "Miscellaneous") |> 
+  ggplot(aes(y = category, fill = fill)) +
+  geom_bar(show.legend = FALSE) +
+  scale_fill_manual(values = c("darkcyan", "gray")) +
+  labs(title = "Count of topics in a sample of top posts",
+       y = NULL,
+       x = "Count") +
+  theme_minimal()
+
 ```
 
-```{r authenticate}
-password <- Sys.getenv("BLUESKY_APP_PASS")
-identifier <- "lassehjorthmadsen.bsky.social"
-auth_object <- get_token(identifier, password)
-token <- auth_object$accessJwt
-my_did <- auth_object$did
+# Lots of examples
+
+Lets take a closer look at examples of each topic, both to confirm that Gemini's labels make sense, and to get a better feel for how actual posts look like. (Again, filtering out reposts.)
+
+::: {.panel-tabset}
+
+```{r}
+categories <- rev(levels(posts$category))
 ```
 
-```{r get_posts}
-#| cache: true
+```{r}
+#| results: asis
 
-if (!file.exists(posts_file)) {
-  posts <- get_user_posts(top$did[1], 
-                          token, 
-                          filter = "posts_no_replies", 
-                          limit = 10)
-    # limit parameter does not work as expected; investigate
-  posts |> write_csv(posts_file)
-} else {
-  posts <- read_csv(posts_file, show_col_types = FALSE)
+for(i in seq_along(categories)) {
+  
+  subtable <- posts |> 
+    filter(!is_repost, category == categories[i]) |> 
+    select(Author = author_displayName, Post = text, Likes =like_count) |> 
+    arrange(-Likes) 
+
+  cat('#', categories[i],' \n')
+  print(htmltools::tagList(datatable(subtable, rownames = FALSE, options = list(dom = 'ftp', pageLength = 5))))
+  cat('\n')
+
 }
 ```
+:::
+\
 
-# Examine posts by top members
+It its oddly funny to browse the top posts; the interested reader is invited to join the fun. Notice that each topic contains a *lot* of sample posts, and you can use the filter function if you are interested in a particular topic or name.
 
-```{r examine}
-#| column: screen
+A couple of casual observations I made (that will no doubt be different from yours):
+
+- Of course, some topics overlap significantly. Academic and political commentary, for example, is inherently related, not least at the moment.
+- Emotions, like frustration, anger, social outrage, seem to attract attention, also in the science and research community.
+- Humor, catchy remarks, and clever wording, are also frequent. 
+- Positive emotions, like joy, enthusiasm and happiness is also popular.
+- Scientific findings and observations are popular too.
+- Simply linking to an interesting article or news clip can sometimes also attract a lot of attention.
+
+Note that these are just random thoughts, not a recipe for writing 'killer' posts. Bear in mind that we observe mostly popular posts from influential posters, and since we didn't compare with something like the 'average' post or the full population of posts, we can't really say if it is the choice of topic, or the tone of voice, or something else, that drives popularity.
+
+Still, it may be interesting to examine the engagement between topics.
+
+# Engagement by topic
+
+Below we have the distribution of likes split by post topic. The number of likes is highly right-skewed, so we use a log-scale, which also means we leave out posts with zero likes. All said and done, the plot below is based on a total of `r posts |> filter(!is.na(category), like_count > 0) |> nrow()` posts.
+
+```{r}
 posts |> 
-  #filter(!is_repost) |> 
-  mutate(created_at = as.Date(created_at)) |> 
-  select(-uri, -cid, -author_did) |> 
-  datatable(rownames = FALSE, filter = 'top')
+  filter(!is.na(category), like_count > 0) |>
+  ggplot(aes(x = like_count, y = category)) +
+  stat_density_ridges(aes(fill = category), alpha = 0.5, quantile_lines = TRUE, quantiles = 0.5, show.legend = FALSE) +
+  scale_x_log10() +
+  labs(title = "Distribution of likes by topic",
+       subtitle = "Based on sample with non-zero likes. Vertical lines are median values",
+    x = "Likes (log-scale)",
+       y = NULL)
 ```
 
+Perhaps not surprisingly, Politics is a particularly engaging topic, but so is Technology & AI, and Personal Life. Economy & Business -- not so much.
+
+In case the reader is wondering if *other* engagement metrics behave a lot differently (or just wants another colorful plot), we can split our plot to compare metrics. Below are the distributions of Likes, Quotes, Replies, and Reposts, by topic. 
+
+```{r}
+posts |> 
+  filter(!is.na(category)) |> 
+  rename(Replies = reply_count, Reposts = repost_count, Likes = like_count, Quotes = quote_count) |> 
+  pivot_longer(c(Replies, Reposts, Likes, Quotes), names_to = "metric") |> 
+  filter(value > 0) |> 
+  ggplot(aes(x = value, y = category)) +
+  stat_density_ridges(aes(fill = category), alpha = 0.5, quantile_lines = TRUE, quantiles = 0.5, show.legend = FALSE) +
+  scale_x_log10() +
+  facet_wrap(facets = vars(metric)) +
+  labs(title = "Distribution of engagement by topic and metric",
+       subtitle = "Based on sample with non-zero metric values. Vertical lines are medians",
+       x = "Count (log-scale)",
+       y = NULL)
+```
+\
+Politics comes out at top on all engagement metrics. 
+
+If you are not so wowed by colorful ridgeline plots (also known as a [joy plots](https://en.wikipedia.org/wiki/Ridgeline_plot), believe it or not) here is a table with just the medians (again excluding zero value, to be consistent with the plot above):
+
+```{r}
+posts |> 
+  filter(!is.na(category)) |> 
+  rename(Replies = reply_count, Reposts = repost_count, Likes = like_count, Quotes = quote_count) |> 
+  pivot_longer(c(Replies, Reposts, Likes, Quotes), names_to = "metric") |> 
+  filter(value > 0) |> 
+  group_by(Category = category, metric) |> 
+  summarise(median = median(value), .groups = "drop") |> 
+  pivot_wider(names_from =  metric, values_from = median) |> 
+  arrange(-Likes) |> 
+  datatable(rownames = FALSE, options = list(dom = 't', pageLength = 20))
+```
+
+
+# Posting activity
+
+Finally, let us turn the attention to the users whose posts we borrowed for this write-up. How does posting frequency look like, and might it drive their position in the network, i.e. centrality?
+
+```{r}
+posters <- posts |> 
+  group_by(actor, displayName) |> 
+  summarise(first_post = min(created_at),
+            last_post = max(created_at),
+            time_span = last_post - first_post,
+            time_span_num = as.numeric(time_span),
+            post_count = n(),
+            posts_per_day = post_count / time_span_num,
+            .groups = "drop") |> 
+  left_join(select(profiles, did, centrality, pageRank, community, community_label), 
+            by = c("actor" = "did"))
+```
+
+To that end, we aggregate the posts to user-level, that is, we examine the 200 users, whose posts we retrieved, in terms of centrality and posting activity. The way the Bluesky API works, is that you can at most retrieve 100 posts per user, and you always get the most recent posts. The date stamp enable us to calculate the average number of posts per day. 
+
+```{r}
+posters |> 
+  ggplot(aes(x = centrality, y = posts_per_day)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth() +
+  labs(title = "Top users by centrality against posting activity",
+       subtitle = "Each dot is one of the 200 top members of the science and research network",
+       x = "Betweenness centrality (log-scale)",
+       y = "Number of posts per day (log-scale)")
+```
+
+To me, it is a bit surprising to not see a correlation between centrality and posting activity. After all, it is common to get a few more followers after posting something popular.
+
+But perhaps it is quality, not quantity, that drives the number of followers and centrality in the network up. Or we need more data; the picture could look quite different if we included many more users and not just top-200. 
+
+Finally, just to statisfy the curiosity, who is that prolific poster, how managed to get close to a hundred post per day?
+
+```{r}
+top_poster <- posters |> slice_max(posts_per_day, with_ties = FALSE) 
+```
+The most frequent poster was user **`r profiles |> filter(did == top_poster$actor) |> pull(handle)`**, with the name: **`r top_poster$displayName`** and description:
+
+> `r profiles |> filter(did == top_poster$actor) |> pull(description)`
+
+That user managed to reach the limit of 100 posts we can fetch in a little over a day. Mostly through reposts, though.
+
+# Final remark
+
+Exploratory analyses like this can be done in a million ways. In fact, that is one of the reasons we have a [reproducibility crisis](https://en.wikipedia.org/wiki/Replication_crisis) in science; in that sense researchers can have too much freedom. For the same reason, it is extremely unlikely that I have done the data gathering, cleaning, wrangling, aggregation, and plotting in the best possible way.
+
+So if you have any questions, suggestions, comments, feedback, praise or anger, connect and send me a message at [Bluesky](https://bsky.app/profile/lassehjorthmadsen.bsky.social) (of course).

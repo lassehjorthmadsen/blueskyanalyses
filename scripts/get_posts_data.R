@@ -1,9 +1,8 @@
-# Gather a data set with a lot of posts
-
+# Gather posts data
 library(tidyverse)
 devtools::load_all("../blueskynet")
 
-# Authenticate
+# Authentication
 password       <- Sys.getenv("BLUESKY_APP_PASS")
 identifier     <- Sys.getenv("BLUESKY_APP_USER")
 auth_object    <- get_token(identifier, password)
@@ -13,47 +12,76 @@ refresh_tok    <- auth_object$refreshJwt
 # Get most recent profiles data
 profiles <- read.csv("data/research_profiles_2025-05-09.csv")
 
-# File to store posts
+# File paths and parameters
 posts_file <- paste0("data/top_posts_", Sys.Date(), ".csv")
+log_file <- paste0("data/error_log_", Sys.Date(), ".txt")
+top_no <- 200
+post_limit <- 100
 
-top_no = 500
-post_limit = 100
-
-# top_profiles <- profiles |>
-#   slice_max(order_by = centrality, n = 3) |> 
-#   pull(did)
-
-# test_data <- top_profiles |> slice(1:3) 
-
-# posts <- top_profiles |>
-#   map_dfr(get_user_posts,
-#           token = token,
-#           filter = "posts_no_replies",
-#           limit = 10) |>
-#   mutate(handle = coalesce(reposted_by, author_handle))
-
-posts <- profiles |> 
+# Get users to process
+top_users <- profiles |>
   slice_max(order_by = centrality, n = top_no) |>
-  pull(did) |> 
-  map_dfr(get_user_posts,
-          token = token,
-          filter = "posts_no_replies",
-          limit = post_limit,
-          .id = "index")
+  pull(did)
 
-posts <- posts |> 
-  mutate(handle = coalesce(reposted_by, author_handle))
+# Check for existing data
+if(file.exists(posts_file)) {
+  processed_users <- read_csv(posts_file, show_col_types = FALSE) |> 
+    distinct(actor) |> 
+    pull(actor)
+} else {
+  processed_users <- character(0)
+}
 
-posts |> write_csv(posts_file)
+users_to_process <- setdiff(top_users, processed_users)
 
+message(sprintf("\nFound %d processed users. Processing remaining %d users.\n", 
+                length(processed_users), 
+                length(users_to_process)))
 
-## DEBUG
+# Process remaining users
+for(i in seq_along(users_to_process)) {
+  current_user <- users_to_process[i]
+  
+  message(sprintf("\n[User %d/%d] Processing: %s", 
+                  i, 
+                  length(users_to_process),
+                  current_user))
+  
+  tryCatch({
+    # Get and process posts
+    user_posts <- get_user_posts(current_user,
+                                 token = token,
+                                 filter = "posts_no_replies",
+                                 limit = post_limit,
+                                 return_df = TRUE)
+    
+    if(!is.null(user_posts) && nrow(user_posts) > 0) {
+      # Write to CSV
+      write_csv(user_posts, 
+                posts_file, 
+                append = (i != 1 || length(processed_users) > 0))
+      
+      message(sprintf("✓ Processed %d posts", nrow(user_posts)))
+    } else {
+      message("✗ No posts found")
+    }
+    
+    # Verify token
+    if(!verify_token(token)) {
+      message("! Token expired, refreshing...")
+      auth_object <- refresh_token(refresh_tok)
+      token <- auth_object$accessJwt
+    }
+    
+    Sys.sleep(0.5)  # Small delay between users
+    
+  }, error = function(e) {
+    message(sprintf("\n✗ Error processing user %d: %s", i, e$message))
+    write(sprintf("%s: Error processing user %d (%s): %s", 
+                  Sys.time(), i, current_user, e$message),
+          log_file,
+          append = TRUE)
+  })
+}
 
-temp <- get_user_posts("did:plc:x6ux2kntuoni6pgdilmyhmci", token)
-
-req <- httr2::request('https://bsky.social/xrpc/app.bsky.feed.getAuthorFeed') |>
-  httr2::req_url_query(actor = "did:plc:jtzxnbwxwbywld23yvnyokzf", filter = "posts_no_replies", limit = 5) |>
-  httr2::req_auth_bearer_token(token = token) |>
-  httr2::req_timeout(seconds = 30)
-
-resp <- httr2::req_perform(req)
+message("\nProcessing completed!")
