@@ -1,6 +1,6 @@
 ---
-title: "The anatomy of a great post"
-subtitle: "Exploring top posts from top network members"
+title: "What are they posting?"
+subtitle: "Exploring top posts from top members of the science and research community on Bluesky"
 author: "Lasse Hjorth Madsen"
 date: today
 format:
@@ -11,13 +11,14 @@ toc: true
 execute:
   echo: false
   warning: false
-  cache: true
+  cache: false
 ---
 
 ```{r setup, cache=FALSE}
 #|cache: false
 library(tidyverse)
 library(ggridges)
+library(ggrepel)
 library(DT)
 
 theme_set(theme_minimal() + 
@@ -42,7 +43,7 @@ posts_cats <- posts_cats |>
 
 # Get display names and category labels
 posts <- posts |> 
-  left_join(select(profiles, did, displayName), by = c("actor" = "did")) |> 
+  left_join(select(profiles, did, displayName, community_label), by = c("actor" = "did")) |> 
   left_join(posts_cats, by = "text") |>  
   mutate(category = fct_rev(fct_infreq(category)))
 ```
@@ -50,13 +51,21 @@ posts <- posts |>
 
 # What is this?
 
-This is an exploratory look at posts from the most influential members in our science and research network. In particular, we look at examples of posts generating an extraordinary amount of engagement, but also statistics on the topic of posts and posting activity.
+This is an exploratory look at posts from the most influential members in our science and research network on Bluesky. In particular, we look at examples of posts generating an extraordinary amount of likes, but also statistics on the topic of posts and posting activity.
 
 # The data
 
 We look at a total of `r nrow(posts)` posts from the top 200 influential members of the network, using the network update from `r profiles_date`. We collected the posts at `r posts_date`. 
 
-(Find the current list of influential members [here](../pages/big-list.qmd), and a more detailed explanation of the 'betweenness centrality' metric we use to measure influence [here](explainer.qmd).)
+Find the current list of influential members [here](../pages/big-list.qmd), and a more detailed explanation of the 'betweenness centrality' metric we use to measure influence [here](explainer.qmd).
+
+# First impression
+
+Not surprisingly, a significant proportion of posts center around educational policy in the US which is in turbulent times at the moment. Also not surprisingly, the majority of network members in academia are critical of cuts in funding and research restrictions.
+
+Still, most posts are about what you would expect from a community like this: Announcements, new positions, new papers, celebrations, links to interesting articles, observations on current events, etc.
+
+But let's look at examples of actual posts from the top members, so the reader can form their own impression. And what better place to start than with the most liked post in the whole data set.
 
 
 # And the winner is ...
@@ -65,7 +74,7 @@ We look at a total of `r nrow(posts)` posts from the top 200 influential members
 top_likes <- posts |> filter(!is_repost) |> slice_max(like_count, with_ties = FALSE)
 ```
 
-To get started, lets just have a quick look at the most liked post in our data set, that is *not* a repost:
+The most liked post, that is *not* a repost, reads like this:
 
 > `r top_likes$text`
 
@@ -101,25 +110,63 @@ Clearly, the most liked posts and reposts are often about political issues, most
 
 # Most popular topics
 
-Categorizing topics of social media posts is a perfect task for a large language model, aka a chatbot. We used a script to query Google's 'Gemini 2.5 flash' model with a sample of posts, and get back descriptive topic labels. We did an random sample of 3,000 post, to not exhaust the token limit. Again no reposts, as those can be hard to label without the original post.
+Categorizing topics of social media posts is a perfect task for a large language model, aka a chatbot. We used a script to query Google's 'Gemini 2.5 flash' model with a sample of posts, and get back descriptive topic labels. We did an random sample of 3,000 posts, to not exhaust the token limit. Again no reposts, as those can be hard to label without the original post.
 
 By inspection, the labels that Gemini came up with, looked very reasonable. Below we provide a lot of examples so anyone can confirm (or reject) that impression. 
 
 First, counting the topics, we see that politics is indeed a popular subject in this subset of  posts from influential network members:
 
 ```{r}
+posts |>
+  filter(!is.na(category)) |>
+  mutate(fill = category == "Miscellaneous") |>
+  count(category, fill) |>  # Count observations per category
+  mutate(
+    total = sum(n),
+    percentage = round(n / total * 100, 0)  # Calculate percentages
+  ) |>
+  ggplot(aes(y = category, x = n, fill = fill)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(
+    aes(label = paste0(percentage, "%")),
+    hjust = -0.1,  # Position labels to the right of bars
+    color = "darkgray",
+    size = 3.5
+  ) +
+  scale_fill_manual(values = c("darkcyan", "gray")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.08))) +  
+  labs(
+    title = "Count of topics in a sample of top posts",
+    y = NULL,
+    x = "Count"
+  ) 
+```
+We could also split those topics by *community*. The concept of a community is based on the [algorithm](https://igraph.org/r/html/1.3.5/cluster_walktrap.html) we use to identify sub-networks. Communities are basically parts of the larger network that are particularly dense, i.e. interconnected. We use this algorithm to color the big [visualization](../pages/big-plot.qmd) with communities.
+
+In practice, communities reflect in large part different research fields; economist and psychologists tend to cluster in different communities, although of course there are also many interdisciplinary connections.
+
+In the plot, each community is labeled with the most common words in members' description.
+
+```{r}
+#| column: page-right
+#| fig-width: 9
+#| fig-height: 6
+
 posts |> 
   filter(!is.na(category)) |> 
   mutate(fill = category == "Miscellaneous") |> 
   ggplot(aes(y = category, fill = fill)) +
   geom_bar(show.legend = FALSE) +
+  facet_wrap(facets = vars(community_label), scales = "free_x") +
   scale_fill_manual(values = c("darkcyan", "gray")) +
   labs(title = "Count of topics in a sample of top posts",
+       subtitle = "By detected communities (closely interconnected sub-networks)",
        y = NULL,
        x = "Count") +
   theme_minimal()
-
 ```
+\
+There are some marked differences in what the communities like to talk about: Politics|law|politics has a lot of posts about (surprise!) Politics, while Psychology|cognitive|neuroscience likes Science & Health topics more. 
 
 # Lots of examples
 
@@ -150,11 +197,11 @@ for(i in seq_along(categories)) {
 :::
 \
 
-It its oddly funny to browse the top posts; the interested reader is invited to join the fun. Notice that each topic contains a *lot* of sample posts, and you can use the filter function if you are interested in a particular topic or name.
+It's oddly funny to browse the top posts; the interested reader is invited to join the fun. Notice that each topic contains a *lot* of sample posts, and you can use the filter function if you are interested in a particular topic or name.
 
 A couple of casual observations I made (that will no doubt be different from yours):
 
-- Of course, some topics overlap significantly. Academic and political commentary, for example, is inherently related, not least at the moment.
+- Of course, some topics overlap significantly. Academic and political commentary, for example, is inherently related.
 - Emotions, like frustration, anger, social outrage, seem to attract attention, also in the science and research community.
 - Humor, catchy remarks, and clever wording, are also frequent. 
 - Positive emotions, like joy, enthusiasm and happiness is also popular.
@@ -181,11 +228,15 @@ posts |>
        y = NULL)
 ```
 
-Perhaps not surprisingly, Politics is a particularly engaging topic, but so is Technology & AI, and Personal Life. Economy & Business -- not so much.
+As expected, Politics is a particularly engaging topic, but so is Technology & AI, and Personal Life. Economy & Business -- not so much.
 
 In case the reader is wondering if *other* engagement metrics behave a lot differently (or just wants another colorful plot), we can split our plot to compare metrics. Below are the distributions of Likes, Quotes, Replies, and Reposts, by topic. 
 
 ```{r}
+#| column: page-right
+#| fig-width: 9
+#| fig-height: 6
+
 posts |> 
   filter(!is.na(category)) |> 
   rename(Replies = reply_count, Reposts = repost_count, Likes = like_count, Quotes = quote_count) |> 
@@ -233,30 +284,42 @@ posters <- posts |>
             post_count = n(),
             posts_per_day = post_count / time_span_num,
             .groups = "drop") |> 
-  left_join(select(profiles, did, centrality, pageRank, community, community_label), 
+  left_join(select(profiles, did, handle, centrality, pageRank, community, community_label), 
             by = c("actor" = "did"))
 ```
 
 To that end, we aggregate the posts to user-level, that is, we examine the 200 users, whose posts we retrieved, in terms of centrality and posting activity. The way the Bluesky API works, is that you can at most retrieve 100 posts per user, and you always get the most recent posts. The date stamp enable us to calculate the average number of posts per day. 
 
 ```{r}
-posters |> 
+posters |>
+  mutate(label = ifelse( rank(desc(posts_per_day)) <= 5, handle, "")) |>
   ggplot(aes(x = centrality, y = posts_per_day)) +
   geom_point() +
+  geom_text_repel(
+    aes(label = label),
+    seed = 19,
+    segment.color = "gray50",
+    segment.size = 0.01,
+    size = 2.6,
+    max.overlaps = Inf,
+    force = 5,
+  ) +
   scale_x_log10() +
-  scale_y_log10() +
+  scale_y_log10(expand = expansion(mult = c(0, 0.1))) +
   geom_smooth() +
-  labs(title = "Top users by centrality against posting activity",
-       subtitle = "Each dot is one of the 200 top members of the science and research network",
-       x = "Betweenness centrality (log-scale)",
-       y = "Number of posts per day (log-scale)")
+  labs(
+    title = "Top users by centrality against posting activity",
+    subtitle = "Each dot is one of the 200 top members of the science and research network",
+    x = "Betweenness centrality (log-scale)",
+    y = "Number of posts per day (log-scale)"
+  )
 ```
 
 To me, it is a bit surprising to not see a correlation between centrality and posting activity. After all, it is common to get a few more followers after posting something popular.
 
 But perhaps it is quality, not quantity, that drives the number of followers and centrality in the network up. Or we need more data; the picture could look quite different if we included many more users and not just top-200. 
 
-Finally, just to statisfy the curiosity, who is that prolific poster, how managed to get close to a hundred post per day?
+Finally, just to satisfy the curiosity, one closer look at one of the most prolific posters, how managed to get close to a hundred post per day?
 
 ```{r}
 top_poster <- posters |> slice_max(posts_per_day, with_ties = FALSE) 

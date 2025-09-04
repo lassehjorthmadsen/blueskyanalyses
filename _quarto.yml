@@ -26,6 +26,8 @@ website:
           text: Compare Networks
         - href: notes/explainer.qmd
           text: Centrality Explained
+        - href: notes/posts.qmd
+          text: What are they posting?
       - href: about.qmd
         text: About
 
