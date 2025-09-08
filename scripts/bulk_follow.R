@@ -12,15 +12,22 @@ refresh_tok <- auth_object$refreshJwt
 my_did <- auth_object$did
 
 # Get saved net and profiles
-net <- readRDS("data/clean_net_2024-02-03.rds")
-profiles <- readRDS("data/clean_profiles_2024-02-03.rds")
+net <- read_rds("data/research_net_2025-05-09.rds")
+profiles <- read_csv("data/research_profiles_2025-05-09.csv", show_col_types = FALSE)
 
 # Get follows
 follows <- get_follows(identifier, token)
 
 # Follow the whole net (except those we already follow)
-dids <- profiles$did |> unique() |> setdiff(follows$did)
-resps <- dids |> map(\(x) follow_actor(my_did = my_did, actor_did = x, token = token))
+dids_to_follow <- profiles$did |> unique() |> setdiff(follows$did)
+
+resps <- dids_to_follow |> 
+  map(\(x) {
+    follow_actor(my_did = my_did, actor_did = x, token = token)
+    Sys.sleep(runif(1, 0, 0.5))
+    }, 
+    .progress = TRUE)
+
 
 # We may get
 # ! HTTP 429 Too Many Requests.
