@@ -1,5 +1,8 @@
 # Follow the net
 
+# NOTE: Bulk following is not allowed, my account was suspended for running this script #
+# see: https://bsky.social/about/support/community-guidelines
+
 library(tidyverse)
 devtools::load_all("../blueskynet")
 
@@ -21,9 +24,11 @@ follows <- get_follows(identifier, token)
 # Follow the whole net (except those we already follow)
 dids_to_follow <- profiles$did |> unique() |> setdiff(follows$did)
 
+safely_follow_actor <- safely(follow_actor)
+
 resps <- dids_to_follow |> 
   map(\(x) {
-    follow_actor(my_did = my_did, actor_did = x, token = token)
+    safely_follow_actor(my_did = my_did, actor_did = x, token = token)
     Sys.sleep(runif(1, 0, 0.5))
     }, 
     .progress = TRUE)

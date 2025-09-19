@@ -11,4 +11,9 @@ notes/*_cache/
 *.rdx
 *.RData
 
+# Keep figure files for GitHub Pages deployment
+# These are needed for the website to display properly
+# Uncomment the line below if you want to ignore figures and regenerate them
+# notes/*/figure-html/*.png
+
 /.quarto/
