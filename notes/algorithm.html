@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Lasse Hjorth Madsen">
-<meta name="dcterms.date" content="2025-09-04">
+<meta name="dcterms.date" content="2025-09-21">
 
 <title>Scientists on Bluesky - A Simple Algorithm to Build a Network from Bluesky</title>
 <style>
@@ -188,7 +188,7 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 4, 2025</p>
+      <p class="date">September 21, 2025</p>
     </div>
   </div>
   
@@ -223,7 +223,7 @@ gtag('config', 'G-BYW6M5N4T9', { 'anonymize_ip': true});
 <p>On a high level the algorithm works like this:</p>
 <ol type="1">
 <li><p>First, hand-pick a single (or several) dark blue actor(s). This is basically actors that we assume <em>must</em> belong the to sub-network of interest, if it exists.</p></li>
-<li><p>Then, get a list of everyone that key actor (or actors) follows. By definition, this must include some of the other the dark blue actors in our subset, because connections are what define a network.</p></li>
+<li><p>Then, get a list of everyone that key actor (or actors) follows. By definition, this must include some of the other dark blue actors in our subset, because connections are what define a network.</p></li>
 <li><p>Next, we identify <em>prospects</em>, i.e.&nbsp;potential additional network members. We do this by filtering out anyone followed who should <em>not</em> be part of the network. For inclusion, two criteria must be fulfilled:</p>
 <ol type="a">
 <li>Description field: Prospects must contain certain predefined keywords. In the case of the science/research community it could be words like “professor” or “biologist”.</li>
