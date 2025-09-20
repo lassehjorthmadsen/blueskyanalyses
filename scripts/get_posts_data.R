@@ -10,41 +10,62 @@ token          <- auth_object$accessJwt
 refresh_tok    <- auth_object$refreshJwt
 
 # Get most recent profiles data
-profiles <- read.csv("data/research_profiles_2025-05-09.csv")
+profiles <- list.files("data", pattern = "research_profiles_.*\\.csv", full.names = TRUE) |>
+  sort(decreasing = TRUE) |>
+  head(1) |>
+  read.csv()
 
 # File paths and parameters
-posts_file <- paste0("data/top_posts_", Sys.Date(), ".csv")
+posts_file <- paste0("data/stratified_posts_", Sys.Date(), ".csv")
 log_file <- paste0("data/error_log_", Sys.Date(), ".txt")
-top_no <- 200
 post_limit <- 100
 
-# Get users to process
-top_users <- profiles |>
-  slice_max(order_by = centrality, n = top_no) |>
-  pull(did)
+# Get users from three ranges: top 200, bottom 200, middle 200
+total_users <- nrow(profiles)
+middle_start <- floor((total_users - 200) / 2)
+middle_end <- middle_start + 199
+
+users_to_sample <- bind_rows(
+  profiles |>
+    slice_max(order_by = centrality, n = 200) |>
+    mutate(range = "top"),
+
+  profiles |>
+    arrange(centrality) |>
+    slice(middle_start:middle_end) |>
+    mutate(range = "middle"),
+
+  profiles |>
+    slice_min(order_by = centrality, n = 200) |>
+    mutate(range = "bottom")
+) |>
+  select(did, handle, range)
 
 # Check for existing data
 if(file.exists(posts_file)) {
-  processed_users <- read_csv(posts_file, show_col_types = FALSE) |> 
-    distinct(actor) |> 
+  processed_users <- read_csv(posts_file, show_col_types = FALSE) |>
+    distinct(actor) |>
     pull(actor)
 } else {
   processed_users <- character(0)
 }
 
-users_to_process <- setdiff(top_users, processed_users)
+users_to_process <- users_to_sample |>
+  filter(!did %in% processed_users)
 
-message(sprintf("\nFound %d processed users. Processing remaining %d users.\n", 
-                length(processed_users), 
-                length(users_to_process)))
+message(sprintf("\nFound %d processed users. Processing remaining %d users.\n",
+                length(processed_users),
+                nrow(users_to_process)))
 
 # Process remaining users
-for(i in seq_along(users_to_process)) {
-  current_user <- users_to_process[i]
+for(i in seq_len(nrow(users_to_process))) {
+  current_user <- users_to_process$did[i]
+  current_range <- users_to_process$range[i]
   
-  message(sprintf("\n[User %d/%d] Processing: %s", 
-                  i, 
-                  length(users_to_process),
+  message(sprintf("\n[User %d/%d] Processing %s range: %s",
+                  i,
+                  nrow(users_to_process),
+                  current_range,
                   current_user))
   
   tryCatch({
