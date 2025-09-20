@@ -46,7 +46,7 @@ On a high level the algorithm works like this:
 
 1. First, hand-pick a single (or several) dark blue actor(s). This is basically actors that we assume *must* belong the to sub-network of interest, if it exists. 
 
-2. Then, get a list of everyone that key actor (or actors) follows. By definition, this must include some of the other the dark blue actors in our subset, because connections are what define a network.
+2. Then, get a list of everyone that key actor (or actors) follows. By definition, this must include some of the other dark blue actors in our subset, because connections are what define a network.
 
 3. Next, we identify *prospects*, i.e. potential additional network members. We do this by filtering out anyone followed who should *not* be part of the network. For inclusion, two criteria must be fulfilled:
     a. Description field: Prospects must contain certain predefined keywords. In the case of the science/research community it could be words like "professor" or "biologist".
