@@ -7,18 +7,37 @@ format: html
 
 ```{r load}
 #| echo: false
-net <- readRDS("data/research_net_2025-05-09.rds")
+#| warning: false
+library(tidyverse)
+
+# Get network info for latest and previous versions
+network_files <- list.files("data", pattern = "research_net_.*\\.rds", full.names = TRUE) |>
+  sort(decreasing = TRUE) |>
+  head(2)
+
+network_stats <- network_files |>
+  map(readRDS) |>
+  map2_dfr(network_files, ~ tibble(
+    date = str_extract(.y, "\\d{4}-\\d{2}-\\d{2}"),
+    members = length(unique(.x$actor_handle))
+  )) |>
+  mutate(version = c("latest", "previous"))
+
+# Load the latest network for downstream use
+net <- network_files[1] |> readRDS()
 ```
 
 We've built a network of scientists and researchers active on Bluesky. The goal is to better understand how this group of users interact on the platform.
 
-The network is built using an iterative algorithm that works like this: We start off with a list of hand-picked members of the scientific community, then expand the network step-by-step. This takes place by considering potential new members that:
+The network is built using an iterative algorithm that works like this: We start off with a single hand-picked account that is assumed to be part of the scientific community, then expand the network step-by-step. This takes place by considering potential new members that:
 
   - are being followed by a substantial number from the existing network
 
   - have a bio description that indicates an affiliation with, or strong interest in, the scientific community
+
+The process is explained in detail [here](notes/algorithm.qmd).
   
-After a number of iterations, we arrived at a science-oriented network of `r format(length(unique(net$actor_handle)), big.mark = ",")` members (or 'actors') on Bluesky. Many, but not all, do research at a research institution. A few are science writers, independent researchers, or work at private organisations.
+After a number of iterations, we arrived at a science-oriented network of `r format(network_stats$members[1], big.mark = ",")` members (or 'actors') on Bluesky as of `r network_stats$date[1]`. Our previous collection on `r network_stats$date[2]` contained `r format(network_stats$members[2], big.mark = ",")` members. Many, but not all, do research at a research institution. A few are science writers, independent researchers, or work at private organisations.
 
 Once the network is established, we can compute centrality measures, like [betweenness centrality](https://en.wikipedia.org/wiki/Betweenness_centrality) or [PageRank](https://en.wikipedia.org/wiki/PageRank) to identify members that may be particularly influential.
 

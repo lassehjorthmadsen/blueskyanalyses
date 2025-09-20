@@ -15,7 +15,10 @@ library(DT)
 ```
 
 ```{r load}
-profiles <- read.csv("../data/research_profiles_2025-05-09.csv")
+profiles <- list.files("../data", pattern = "research_profiles_.*\\.csv", full.names = TRUE) |>
+  sort(decreasing = TRUE) |>
+  head(1) |>
+  read.csv()
 ```
 
 The list is sortable, searchable, and playable. Have fun.
