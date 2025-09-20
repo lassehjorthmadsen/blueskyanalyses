@@ -19,6 +19,8 @@ profiles <- list.files("../data", pattern = "research_profiles_.*\\.csv", full.n
   sort(decreasing = TRUE) |>
   head(1) |>
   read.csv()
+
+exclude_handles <- read_lines("../data/exclude_handles.txt")
 ```
 
 The list is sortable, searchable, and playable. Have fun.
@@ -28,11 +30,12 @@ The list is sortable, searchable, and playable. Have fun.
 ```{r rank}
 #| cache: false
 #| column: page
-top <- profiles |> 
-  slice_max(order_by = centrality, n = 100, with_ties = FALSE) |> 
+top <- profiles |>
+  filter(!handle %in% exclude_handles) |>
+  slice_max(order_by = centrality, n = 100, with_ties = FALSE) |>
   mutate(across(centrality, \(x) round(x, digits = 0)))
 
-top |> select(handle, displayName, description, centrality) |> 
+top |> select(handle, displayName, description, centrality) |>
   datatable(rownames = FALSE)
 ```
 

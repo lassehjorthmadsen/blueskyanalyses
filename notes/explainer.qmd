@@ -7,7 +7,7 @@ toc: true
 execute:
   echo: false
   warning: false
-  cache: false
+  cache: true
 ---
 
 ```{r set_up}
