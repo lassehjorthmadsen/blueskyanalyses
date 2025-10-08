@@ -17,3 +17,5 @@ notes/*_cache/
 # notes/*/figure-html/*.png
 
 /.quarto/
+
+**/*.quarto_ipynb

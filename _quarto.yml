@@ -28,6 +28,9 @@ website:
           text: Centrality Explained
         - href: notes/posts.qmd
           text: What are they posting?
+        - href: notes/posts-followup.qmd
+          text: More postings
+
       - href: about.qmd
         text: About
 

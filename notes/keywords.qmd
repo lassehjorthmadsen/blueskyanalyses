@@ -35,10 +35,9 @@ bi_freq <- bi_dfm |> textstat_frequency(n = 100)
 freq %>% 
   ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
   geom_point() +
-  labs(x = "Frequency (log)", y = NULL) +
+  labs(x = "Frequency (log)", y = NULL, title = "Uni-gram frequencies") +
   scale_x_log10() +
-  theme_minimal() +
-  labs("Uni-gram frequencies")
+  theme_minimal()
 ```
 
 
@@ -47,10 +46,9 @@ freq %>%
 bi_freq %>% 
   ggplot(aes(y = reorder(feature, frequency), x = frequency)) +
   geom_point() +
-  labs(x = "Frequency (log)", y = NULL) +
+  labs(x = "Frequency (log)", y = NULL, title = "Bi-gram frequencies") +
   scale_x_log10() +
-  theme_minimal() +
-  labs("Bi-gram frequencies")
+  theme_minimal()
 ```
 
 
