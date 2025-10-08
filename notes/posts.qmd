@@ -5,7 +5,7 @@ author: "Lasse Hjorth Madsen"
 date: today
 format:
   html:
-    embed-resources: true
+    embed-resources: false
     df-print: paged
 toc: true
 execute:
@@ -185,7 +185,7 @@ for(i in seq_along(categories)) {
   
   subtable <- posts |> 
     filter(!is_repost, category == categories[i]) |> 
-    select(Author = author_displayName, Post = text, Likes =like_count) |> 
+    select(Author = author_displayName, Post = text, Likes = like_count) |> 
     arrange(-Likes) 
 
   cat('#', categories[i],' \n')
@@ -270,7 +270,7 @@ posts |>
 ```
 
 
-# Posting activity
+# Posting activity {#sec-posting-activity}
 
 Finally, let us turn the attention to the users whose posts we borrowed for this write-up. How does posting frequency look like, and might it drive their position in the network, i.e. centrality?
 
