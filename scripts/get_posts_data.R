@@ -41,17 +41,38 @@ users_to_sample <- bind_rows(
 ) |>
   select(did, handle, range)
 
-# Check for existing data
+# Check for existing data and determine resume point
 if(file.exists(posts_file)) {
   processed_users <- read_csv(posts_file, show_col_types = FALSE) |>
     distinct(actor) |>
     pull(actor)
+
+  message(sprintf("Found existing file with data from %d users", length(processed_users)))
 } else {
   processed_users <- character(0)
 }
 
 users_to_process <- users_to_sample |>
   filter(!did %in% processed_users)
+
+# Show progress by range
+if(nrow(users_to_process) < nrow(users_to_sample)) {
+  remaining_by_range <- users_to_process |>
+    count(range, name = "remaining") |>
+    mutate(total = case_when(
+      range == "top" ~ 200,
+      range == "middle" ~ 200,
+      range == "bottom" ~ 200
+    )) |>
+    mutate(completed = total - remaining)
+
+  message("Progress by range:")
+  for(i in seq_len(nrow(remaining_by_range))) {
+    r <- remaining_by_range[i,]
+    message(sprintf("  %s: %d/%d completed (%d remaining)",
+                    r$range, r$completed, r$total, r$remaining))
+  }
+}
 
 message(sprintf("\nFound %d processed users. Processing remaining %d users.\n",
                 length(processed_users),
@@ -68,6 +89,14 @@ for(i in seq_len(nrow(users_to_process))) {
                   current_range,
                   current_user))
   
+  # Verify token before processing
+  if(!verify_token(token)) {
+    message("! Token expired, refreshing...")
+    auth_object <- refresh_token(refresh_tok)
+    token <- auth_object$accessJwt
+    refresh_tok <- auth_object$refreshJwt
+  }
+
   tryCatch({
     # Get and process posts
     user_posts <- get_user_posts(current_user,
@@ -75,27 +104,20 @@ for(i in seq_len(nrow(users_to_process))) {
                                  filter = "posts_no_replies",
                                  limit = post_limit,
                                  return_df = TRUE)
-    
+
     if(!is.null(user_posts) && nrow(user_posts) > 0) {
-      # Write to CSV
-      write_csv(user_posts, 
-                posts_file, 
-                append = (i != 1 || length(processed_users) > 0))
-      
+      # Write to CSV (always append if file exists)
+      write_csv(user_posts,
+                posts_file,
+                append = file.exists(posts_file))
+
       message(sprintf("✓ Processed %d posts", nrow(user_posts)))
     } else {
       message("✗ No posts found")
     }
-    
-    # Verify token
-    if(!verify_token(token)) {
-      message("! Token expired, refreshing...")
-      auth_object <- refresh_token(refresh_tok)
-      token <- auth_object$accessJwt
-    }
-    
+
     Sys.sleep(0.5)  # Small delay between users
-    
+
   }, error = function(e) {
     message(sprintf("\n✗ Error processing user %d: %s", i, e$message))
     write(sprintf("%s: Error processing user %d (%s): %s", 

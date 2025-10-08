@@ -1,0 +1,242 @@
+---
+title: "More postings"
+subtitle: "Follow-up to [earlier](../notes/posts.qmd) exploration of posts from the science and research community"
+author: "Lasse Hjorth Madsen"
+date: today
+format:
+  html:
+    embed-resources: false
+    df-print: paged
+toc: true
+execute:
+  echo: false
+  warning: false
+  cache: false
+---
+
+```{r setup, cache=FALSE}
+#|cache: false
+library(tidyverse)
+library(DT)
+
+theme_set(theme_minimal() + 
+            theme(axis.title.x = element_text(margin = margin(t = 10, r =  0, b = 0, l = 0)),
+                  axis.title.y = element_text(margin = margin(t =  0, r = 10, b = 0, l = 0))))
+
+options(scipen = 9999)
+```
+
+```{r quirk}
+#| include: false
+# Force DT dependencies to load -- handling the weird Quarto/R Markdown rendering quirk 
+DT::datatable(data.frame(x=1))
+```
+
+```{r get_data}
+profiles_date <- as.Date("2025-09-19")
+posts_date <- as.Date("2025-09-30")
+
+profiles <- read_csv(paste0("../data/research_profiles_", profiles_date, ".csv"), show_col_types = FALSE)
+posts <- read_csv(paste0("../data/stratified_posts_", posts_date, ".csv"), show_col_types = FALSE)
+posts_cats <- read_csv(paste0("../data/stratified_posts_cat_", posts_date, ".csv"), show_col_types = FALSE)
+
+# Clean
+posts_cats <- posts_cats |> 
+  distinct(.keep_all = TRUE) |> # In case of duplicates 
+  select(-id, -chunk_id)
+
+# Get display names and category labels
+posts <- posts |> 
+  left_join(select(profiles, did, displayName, community_label), by = c("actor" = "did")) |> 
+  left_join(posts_cats, by = "text") |>  
+  mutate(category = fct_rev(fct_infreq(category)))
+```
+
+```{r find_strata}
+# Get users from three ranges: top 200, bottom 200, middle 200
+total_users <- nrow(profiles)
+middle_start <- floor((total_users - 200) / 2)
+middle_end <- middle_start + 199
+
+users_to_sample <- bind_rows(
+  profiles |>
+    slice_max(order_by = centrality, n = 200) |>
+    mutate(`Centrality range` = "Top 200"),
+
+  profiles |>
+    arrange(centrality) |>
+    slice(middle_start:middle_end) |>
+    mutate(`Centrality range` = "Middle 200"),
+
+  profiles |>
+    slice_min(order_by = centrality, n = 200) |>
+    mutate(`Centrality range` = "Bottom 200")
+) |>
+  select(did, handle, `Centrality range`)
+```
+
+
+```{r join_range}
+posts <- posts |> 
+  left_join(users_to_sample, by = c("actor" = "did")) |> 
+  mutate(`Centrality range` = fct_infreq(`Centrality range`))
+```
+
+# What is this?
+
+This is a follow up to the [note](../notes/posts.qmd) with an exploratory analysis of posts from the most influential members in the science and research network on Bluesky. There, we saw that a fair chunk of posts was not strictly science (as in 'I published this nice paper') but more political in nature (as in 'The way the current administration is slashing research funding is very wrong').
+
+For that analysis we looked at the top-influential members, but I wonder if the less well-connected majority have a different posting pattern.
+
+To shed some light on that, I:
+
+1. Updated the network (this was due for a refresh anyway).
+
+2. Collected fresh data with posts, this time not only from the top-200 members, but also from the middle-200 and bottom-200 members, as measured by the 'betweenness centrality' metric (explained [here](../notes/explainer.qmd)).
+
+By comparing with the earlier plots it should be possible to figure out if the distribution of topics in posts vary substantially between the top-, middle, and bottom segments. Also, it's nice to confirm if the results we got earlier is roughly stable.
+
+This is a relatively short note; I will mostly focus on splitting a few of the key charts from the [earlier](../notes/posts.qmd) note by the mentioned strata.
+
+# The data
+
+We look at a total of `r nrow(posts)` posts from members of the network, using the network update from `r profiles_date`. We collected the posts at `r posts_date`. The posts are from a total of `r n_distinct(posts$actor)` network members.
+
+Counting the posts by centrality range and by repost/non-repost, we see:
+
+```{r}
+posts |> 
+    count(is_repost, `Centrality range`) |> 
+    ggplot(aes(x = n, y = fct_rev(`Centrality range`), fill = is_repost)) +
+    geom_col() +
+    scale_fill_discrete(labels = c("TRUE" = "Repost", "FALSE" = "Original post")) +
+    labs(title = "Count of posts",
+  subtitle = "By centrality range and type of post", 
+     fill = NULL, y = "Centrality range", x = "Count")
+```
+
+It appears that the top-centrality-members account for a disproportionately large chunk of the posts, because this segment has many *reposts*. That is perhaps not surprising; they have many connections and are therefore probably exposed to more material fit for resposting.
+
+# Most popular topics
+
+Like in the original analysis, we had Google's large language model, 'Gemini 2.5 flash' to label the posts by topics. The labels are similar but not identical to the ones we retrieved last time around. It's a bit uncertain if that is due to:
+
+a) change in data (new users added, new posts collected), or
+
+b) the inherent variation in responses from chatbots, or
+
+c) good ol' statistical variations; this is not a huge sample.
+
+Still, the overall picture is similar. At first glance, politics occupies less space, but this is because it is now split into 'Political Commentary' and 'Political News', so overall politics is about as frequent as 'Academic & Career' like in the earlier plot. 
+
+We *do* see that 'Political Commentary' is more often from users in the top 200 centrality range, whereas 'Research & Article' is mostly from the *bottom* 200 centrality range. (However for 'Political News', it is the other way around.)
+
+So to some extent the suspicion is confirmed: The most influential network members do have different preferences for topics they post about, leaning more towards politics than traditional science-related topics. 
+
+```{r}
+posts |>
+  filter(!is.na(category), !is_repost) |>
+  count(category, `Centrality range`) |>  
+  ggplot(aes(y = category, x = n, fill = `Centrality range`)) +
+  geom_col() +
+  labs(
+    title = "Count of topics in a sample of posts",
+    subtitle = "by poster's centrality range",
+    y = NULL,
+    x = "Count"
+  ) +
+  theme(legend.justification = c(1, 0),  legend.position = c(1, 0))
+```
+
+
+We could also split those topics by *community*. Communities are basically parts of the larger network that are particularly dense, i.e. interconnected. In practice, communities reflect mostly different research fields (although of course there are also many interdisciplinary connections between members of different communities).
+
+In the plot, each community is labeled with the most common words in members' description.
+
+```{r}
+#| column: page-right
+#| fig-width: 9
+#| fig-height: 6
+
+posts |> 
+  filter(!is.na(category)) |>
+  count(category, `Centrality range`, community_label) |>  
+  ggplot(aes(y = category, x = n, fill = `Centrality range`)) +
+  geom_col() +
+  facet_wrap(facets = vars(community_label), scales = "free_x") +
+  labs(title = "Count of topics in a sample of top posts",
+       subtitle = "By detected communities (closely interconnected sub-networks)",
+       y = NULL,
+       x = "Count") +
+  theme_minimal()
+```
+\
+There are some differences in what the communities like to talk about, some are not too surprising: Users with 'biology' in their descriptions like to post about 'Science & Health', while 'history' comes with a tendency to post about 'History & Culture'. 
+
+# Lots of examples
+
+To get a better feel for how actual posts look like, let's pull out lots of examples, still filtering out reposts. Posts are grouped by topic, and we have information about the poster's centrality range, and the number of likes each post has received. It's kind of fun to browse:
+
+::: {.panel-tabset}
+
+```{r}
+categories <- rev(levels(posts$category))
+```
+
+```{r}
+#| results: asis
+
+for(i in seq_along(categories)) {
+  
+  subtable <- posts |> 
+    filter(!is_repost, category == categories[i]) |> 
+    select(Author = author_displayName, `Centrality range`, Post = text, Likes = like_count) |> 
+    arrange(-Likes) 
+
+  cat('#', categories[i],' \n')
+  print(htmltools::tagList(datatable(subtable, rownames = FALSE, options = list(dom = 'ftp', pageLength = 5))))
+  cat('\n')
+
+}
+```
+:::
+\
+
+# Posting activity
+
+Finally, let us also update the chart we had on posting frequency. In the [earlier plot](posts.qmd#sec-posting-activity) I was a bit surprised to not see a correlation between centrality and posting activity. But when we include the full range of centralities, there is indeed some degree of correlation: The top 200 posters do post more frequently than the middle 200, who in turn post more frequently than the bottom 200. 
+
+```{r}
+posters <- posts |> 
+  group_by(actor, displayName, `Centrality range`) |> 
+  summarise(first_post = min(created_at),
+            last_post = max(created_at),
+            time_span_days = as.numeric(difftime(last_post, first_post, units = "days")),
+            post_count = n(),
+            posts_per_day = post_count / time_span_days,
+            .groups = "drop") |> 
+  left_join(select(profiles, did, handle, centrality, pageRank, community, community_label), 
+            by = c("actor" = "did"))
+```
+
+
+```{r}
+#| column: page-right
+#| fig-width: 9
+#| fig-height: 6
+
+posters |>
+  mutate(`Centrality range` = fct_rev(`Centrality range`)) |> 
+  ggplot(aes(x = centrality, y = posts_per_day, color = fct_rev(`Centrality range`))) +
+  geom_point(show.legend = FALSE) +
+  scale_x_log10(n.breaks = 3) +
+  scale_y_log10(expand = expansion(mult = c(0, 0.1))) +
+  geom_smooth(show.legend = FALSE) +
+  facet_wrap(facets = vars(`Centrality range`), scales = "free_x") +
+  labs(
+    title = "Users by centrality and posting activity",
+    subtitle = "Each dot is one member of the science and research network",
+    x = "Betweenness centrality (log-scale)",
+    y = "Number of posts per day (log-scale)"
+  )
+```
