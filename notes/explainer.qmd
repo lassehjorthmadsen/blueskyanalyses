@@ -1,7 +1,7 @@
 ---
 title: "Centrality Explained"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2024-07-15"
 format: html
 toc: true
 execute:

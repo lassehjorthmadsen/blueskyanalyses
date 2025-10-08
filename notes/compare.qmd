@@ -1,7 +1,7 @@
 ---
 title: "Compare Newer and Older Net"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2024-10-29"
 format: html
 toc: true
 execute:

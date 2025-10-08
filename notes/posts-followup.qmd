@@ -2,7 +2,7 @@
 title: "More postings"
 subtitle: "Follow-up to [earlier](../notes/posts.qmd) exploration of posts from the science and research community"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2025-10-08"
 format:
   html:
     embed-resources: false

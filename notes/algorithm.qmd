@@ -1,7 +1,7 @@
 ---
 title: "A Simple Algorithm to Build a Network from Bluesky"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2024-11-11"
 format: html
 toc: true
 execute:

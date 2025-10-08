@@ -1,7 +1,7 @@
 ---
 title: "Most recent network: What changed?"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2025-05-12"
 format: html
 toc: true
 execute:

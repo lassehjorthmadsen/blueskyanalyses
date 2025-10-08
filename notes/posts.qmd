@@ -2,7 +2,7 @@
 title: "What are they posting?"
 subtitle: "Exploring top posts from top members of the science and research community on Bluesky"
 author: "Lasse Hjorth Madsen"
-date: today
+date: "2025-09-01"
 format:
   html:
     embed-resources: false
