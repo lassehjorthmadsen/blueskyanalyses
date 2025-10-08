@@ -2,6 +2,7 @@
 title: "Centrality Explained"
 author: "Lasse Hjorth Madsen"
 date: "2024-07-15"
+date-modified: last-modified
 format: html
 toc: true
 execute:
