@@ -1,0 +1,9 @@
+{
+    "r.rterm.windows": "C:\\Users\\LMDN\\AppData\\Local\\Programs\\R\\R-4.5.1\\bin\\R.exe",
+    "r.rpath.windows": "C:\\Users\\LMDN\\AppData\\Local\\Programs\\R\\R-4.5.1\\bin\\R.exe",
+    "positron.interpreter.r": "C:\\Users\\LMDN\\AppData\\Local\\Programs\\R\\R-4.5.1\\bin\\R.exe",
+    "terminal.integrated.env.windows": {
+        "R_HOME": "C:\\Users\\LMDN\\AppData\\Local\\Programs\\R\\R-4.5.1",
+        "PATH": "${env:PATH};C:\\Users\\LMDN\\AppData\\Local\\Programs\\R\\R-4.5.1\\bin"
+    }
+}

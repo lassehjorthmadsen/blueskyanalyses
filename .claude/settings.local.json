@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/LMDN/OneDrive - Novo Nordisk/Python-Projects/link-regdoc-sop/**)",
+      "Bash(Rscript:*)",
+      "Bash(quarto check:*)",
+      "Bash(quarto publish:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
