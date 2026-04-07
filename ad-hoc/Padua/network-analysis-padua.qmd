@@ -1,0 +1,348 @@
+---
+title: "Network Analysis for University of Padua"
+author: "Lasse Hjorth Madsen"
+date: "2026-04-06"
+format: html
+toc: true
+execute:
+  echo: false
+  warning: false
+  cache: true
+---
+
+# What is this?
+
+This is an analysis of the Bluesky network of researchers from University of Padua. We consider:
+
+- An initial list of faculty members from Padua; they constitute our *core network*, if they follow *and* are followed by any others from the list.
+- An *expanded network* based on the initial list plus everyone they follow, then trimmed to include only accounts with both follows and followers inside the network.
+- For comparison, we use the current *FISCI network*, with influential scientists, researchers, and science communicators on Bluesky. Collected via the same algorithm; available at [findscientist.org](https://findscientist.org).
+
+
+```{r}
+#| label: set_up
+#| message: false
+#| warning: false
+library(tidyverse)
+library(knitr)
+library(DT)
+```
+
+```{r}
+#| label: get_data
+
+# Works both interactively (wd = project root) and when rendering (wd = qmd folder)
+data_dir <- if (file.exists("padua_bundle_2026-04-06.rds")) "." else "ad-hoc/Padua"
+
+# Padua bundle: list with net, profiles, widget, freqs, core_widget
+padua_bundle   <- read_rds(file.path(data_dir, "padua_bundle_2026-04-06.rds"))
+padua_net      <- padua_bundle$net
+padua_profiles <- padua_bundle$profiles
+
+# Original list of Padua academics (deduped, ascii-cleaned)
+padua_files <- c(
+  "Bluesky 'Padova' academics.txt",
+  "Bluesky 'unipd' academics.txt",
+  "Bluesky 'Padua' academics.txt"
+)
+
+padua_list <- padua_files |>
+  map(\(f) read_csv(file.path(data_dir, f), col_names = "id", show_col_types = FALSE)) |>
+  bind_rows() |>
+  pull(id) |>
+  iconv(to = "ASCII", sub = "") |>
+  unique()
+
+# FISCI reference network (influential scientists on Bluesky)
+fisci_net      <- read_rds(file.path(data_dir, "research_net_2026-04-03.rds"))
+fisci_profiles <- read_rds(file.path(data_dir, "research_profiles_2026-04-03.rds"))
+```
+
+# Key network metrics
+
+```{r}
+#| label: key_figures
+#| echo: false
+
+network_stats <- function(edges) {
+  members <- unique(c(edges$actor_handle, edges$follows_handle))
+  n <- length(members)
+  m <- nrow(edges)
+  density <-  m / (n * (n - 1))
+  list(members = n, connections = m, density = density)
+}
+
+core_edges <- padua_net |>
+  filter(actor_handle %in% padua_list, follows_handle %in% padua_list)
+
+core     <- network_stats(core_edges)
+expanded <- network_stats(padua_net)
+fisci    <- network_stats(fisci_net)
+
+tibble(
+  Network = c("Core Padua network", "Expanded Padua network", "FISCI comparison network"),
+  Members = c(core$members, expanded$members, fisci$members),
+  Connections = c(core$connections, expanded$connections, fisci$connections),
+  Density = c(core$density, expanded$density, fisci$density)
+) |>
+  mutate(
+    Members = format(Members, big.mark = ","),
+    Connections = format(Connections, big.mark = ","),
+    Density = formatC(Density, format = "f", digits = 4)
+  ) |>
+  kable(align = "lrrr", caption = "Overview of the Padua Bluesky network")
+```
+# Overlap with FISCI
+
+```{r}
+#| label: fisci_overlap
+fisci_handles <- unique(c(fisci_net$actor_handle, fisci_net$follows_handle))
+
+core_handles      <- unique(c(core_edges$actor_handle, core_edges$follows_handle))
+list_in_fisci     <- sum(padua_list %in% fisci_handles)
+core_in_fisci     <- sum(core_handles %in% fisci_handles)
+expanded_in_fisci <- sum(unique(padua_profiles$handle) %in% fisci_handles)
+
+tibble(
+  Group = c("Original Padua list", "Core Padua network", "Expanded Padua network"),
+  Total = c(length(padua_list), length(core_handles), n_distinct(padua_profiles$handle)),
+  `In FISCI` = c(list_in_fisci, core_in_fisci, expanded_in_fisci),
+  `% in FISCI` = scales::percent(`In FISCI` / Total, accuracy = 0.1)
+) |>
+  mutate(across(c(Total, `In FISCI`), \(x) format(x, big.mark = ","))) |>
+  kable(align = "lrrr", caption = "Padua accounts also present in the FISCI network")
+```
+
+# Core Padua network
+
+The core Padua network is a bit sparse, a little fragmented, with many small, isolated islands. 
+
+```{r}
+#| label: core_widget
+#| column: page-right
+#| fig-height: 8
+padua_bundle$core_widget
+```
+
+# Expanded Padua network
+
+The expanded network is richer: everyone is connected to everyone, not necessarily directly, but through others. This enables, in principle, information to travel through the *whole* network. (Notice some non-academic subnetworks, since we included *all* accounts being followed.)
+
+```{r}
+#| label: expanded_widget
+#| column: page-right
+#| fig-height: 8
+padua_bundle$widget
+```
+
+```{r}
+#| label: community_plot_fn
+plot_communities <- function(profiles, title, top_n = 15) {
+  profiles |>
+    mutate(Community = fct_lump_n(community_label, n = top_n, other_level = "Other")) |>
+    count(Community) |>
+    mutate(Community = fct_reorder(Community, n) |>
+             fct_relevel("Other", after = 0)) |>
+    ggplot(aes(x = n, y = Community, fill = Community == "Other")) +
+    geom_col() +
+    geom_text(aes(label = n), hjust = -0.2, size = 3) +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+    scale_fill_manual(values = c("FALSE" = "steelblue", "TRUE" = "gray80"),
+                      guide = "none") +
+    labs(
+      title = title,
+      subtitle = "Communities detected with the Walktrap algorithm",
+      x = "Members",
+      y = "Community"
+    ) +
+    theme_minimal()
+}
+```
+
+# Padua communities
+
+We use another method, the Walktrap algorithm, to identify so-called communities in our networks. A community in network theory is basically a subnetwork with a particularly high density of connections, i.e. some group of users that are likely to follow each other. In the bigger FISCI network, communities often coincide with academic disciplines, because historians are likely to follow other historians, for example.
+
+In order to assign meaningful *labels* to the communities, we look at the top-three most frequent words in the members' descriptions, again using an automated metric ("term frequency–inverse document frequency") to discount *very* common words. This is sometimes useful -- sometimes not so much.
+
+Not surprisingly, "professor" and "university" are frequent words in several communities, for example.
+
+The plot below suggests that we have *two* big communities in the expanded network that like to use the word "science", followed by the third biggest community associated with the word "law".
+
+The expanded network has more or less the same relative distribution of communities as the core network. Likely a natural consequence of the expansion -- the economists in the original list tend to follow other economists, who in turn get included in the expanded network.
+
+```{r}
+#| label: padua_communities
+#| fig-height: 5
+padua_profiles |>
+  mutate(
+    Membership = if_else(handle %in% padua_list, "Core", "Expanded only"),
+    Community  = fct_lump_n(community_label, n = 10, other_level = "Other")
+  ) |>
+  count(Community, Membership) |>
+  group_by(Community) |>
+  mutate(total = sum(n)) |>
+  ungroup() |>
+  mutate(Community = fct_reorder(Community, total) |>
+           fct_relevel("Other", after = 0)) |>
+  ggplot(aes(x = n, y = Community, fill = Membership)) +
+  geom_col() +
+  geom_text(
+    aes(x = total, y = Community, label = total),
+    hjust = -0.2, size = 3,
+    inherit.aes = FALSE,
+    data = \(d) distinct(d, Community, total)
+  ) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+  scale_fill_manual(values = c("Core" = "steelblue", "Expanded only" = "lightsteelblue")) +
+  labs(
+    title = "Community sizes in the Padua network",
+    subtitle = "Stacked by core vs expanded-only membership",
+    x = "Members",
+    y = "Community",
+    fill = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+# FISCI communities
+
+For comparison, the bigger FISCI network has the following main communities:
+
+```{r}
+#| label: fisci_communities
+#| fig-height: 5
+plot_communities(fisci_profiles, "Community sizes in the FISCI network")
+```
+
+# Posting activity
+
+How active is the core Padua network compared to the FISCI network? The histogram below shows the distribution of posts per account (log scale), restricted to the core Padua members and the FISCI accounts.
+
+On this metric, the core Padua network is less active than the FISCI network -- not surprisingly, since FISCI has rather strict inclusion criteria, designed to focus on scientists that seem particularly influential on Bluesky.
+
+```{r}
+#| label: posting_activity
+#| fig-height: 4
+core_padua_edges <- padua_net |>
+  filter(actor_handle %in% padua_list, follows_handle %in% padua_list)
+core_padua_handles <- unique(c(core_padua_edges$actor_handle,
+                               core_padua_edges$follows_handle))
+
+core_activity <- padua_profiles |>
+  filter(handle %in% core_padua_handles) |>
+  transmute(postsCount = as.numeric(postsCount), Network = "Core Padua")
+
+fisci_activity <- fisci_profiles |>
+  transmute(postsCount = as.numeric(postsCount), Network = "FISCI")
+
+bind_rows(core_activity, fisci_activity) |>
+  filter(postsCount > 0) |>
+  ggplot(aes(x = postsCount, fill = Network)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 60, position = "identity", alpha = 0.6) +
+  scale_x_log10(labels = scales::label_comma()) +
+  scale_fill_manual(values = c("Core Padua" = "steelblue", "FISCI" = "darkorange")) +
+  labs(
+    title = "Posting activity: Core Padua vs FISCI",
+    subtitle = "Distribution of total posts per account (log scale)",
+    x = "Posts (log scale)",
+    y = "Density",
+    fill = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+# Topics for posts
+
+What are the Padua academics actually posting about? We collected recent posts from members of the expanded Padua network and categorised a sample of them with a large language model (Google Gemini), using the same approach as for the [FISCI posts analysis](../../notes/posts.qmd). Reposts are excluded, since they are hard to label without the original context.
+
+```{r}
+#| label: posts_data
+padua_posts <- read_csv(
+  file.path(data_dir, "padua_posts_2026-04-06.csv"),
+  show_col_types = FALSE
+)
+
+padua_posts_cat <- read_csv(
+  file.path(data_dir, "padua_posts_cat_2026-04-07.csv"),
+  show_col_types = FALSE
+) |>
+  distinct(text, category)
+
+padua_posts <- padua_posts |>
+  left_join(padua_posts_cat, by = "text") |>
+  mutate(category = fct_rev(fct_infreq(category)))
+```
+
+```{r}
+#| label: topic_counts
+#| fig-height: 5
+padua_posts |>
+  filter(!is_repost, !is.na(category)) |>
+  count(category) |>
+  mutate(
+    total = sum(n),
+    percentage = round(n / total * 100, 0),
+    fill = category == "Miscellaneous"
+  ) |>
+  ggplot(aes(y = category, x = n, fill = fill)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(
+    aes(label = paste0(percentage, "%")),
+    hjust = -0.1, color = "darkgray", size = 3.5
+  ) +
+  scale_fill_manual(values = c("FALSE" = "darkcyan", "TRUE" = "gray")) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    title = "Topics in posts from the Padua network",
+    subtitle = "Categorised with Google Gemini; reposts excluded",
+    x = "Posts",
+    y = NULL
+  ) +
+  theme_minimal()
+```
+
+## The most liked post
+
+The single most liked original post (no reposts) from the entire Padua dataset:
+
+```{r}
+#| label: top_post
+#| column: page-right
+padua_posts |>
+  filter(!is_repost) |>
+  slice_max(like_count, n = 1, with_ties = FALSE) |>
+  select(
+    Author = author_displayName,
+    Post = text,
+    Likes = like_count
+  ) |>
+  datatable(rownames = FALSE, options = list(dom = 't'))
+```
+
+## Most liked post by topic
+
+Restricted to the categorised sample, the most liked original post within each topic:
+
+```{r}
+#| label: top_post_by_topic
+#| column: page-right
+padua_posts |>
+  filter(!is_repost, !is.na(category)) |>
+  group_by(category) |>
+  slice_max(like_count, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  arrange(desc(like_count)) |>
+  select(
+    Topic = category,
+    Author = author_displayName,
+    Post = text,
+    Likes = like_count
+  ) |>
+  datatable(rownames = FALSE, options = list(dom = 'tp', pageLength = 10))
+```
+
+
