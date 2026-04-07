@@ -16,11 +16,9 @@ pcats_file <- posts_file |>
 sample_size <- 10000
 chunk_size <- 500
 model <- "gemini_2_5_flash"
-api_key <- Sys.getenv("MARKETPLACE_API_KEY")
-
-# API configuration
-base_url <- "https://api.marketplace.novo-genai.com/v1"
-cert_path <- "C:/Users/LMDN/OneDrive - Novo Nordisk/.certs/zscaler_root_ca.crt"
+api_key   <- Sys.getenv("MARKETPLACE_API_KEY")
+base_url  <- Sys.getenv("MARKETPLACE_BASE_URL")
+cert_path <- Sys.getenv("MARKETPLACE_CERT_PATH")
 
 system_prompt <- paste(
   "You are a post categorization expert.",
@@ -41,12 +39,10 @@ system_prompt <- paste(
 )
 
 # Simple validation
-if (api_key == "") {
-  stop("MARKETPLACE_API_KEY environment variable not set")
-}
-if (!file.exists(cert_path)) {
-  stop("Certificate file not found")
-}
+if (api_key == "")   stop("MARKETPLACE_API_KEY environment variable not set")
+if (base_url == "")  stop("MARKETPLACE_BASE_URL environment variable not set")
+if (cert_path == "") stop("MARKETPLACE_CERT_PATH environment variable not set")
+if (!file.exists(cert_path)) stop("Certificate file not found: ", cert_path)
 
 # Chat function using closure to avoid global variables
 create_chat_session <- function(system_prompt) {
