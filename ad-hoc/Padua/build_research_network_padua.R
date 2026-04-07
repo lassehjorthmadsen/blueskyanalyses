@@ -1,5 +1,6 @@
 # Build a network of researchers from University of Padua
 library(tidyverse)
+library(httr2)
 devtools::load_all("../blueskynet")
 
 # Key actors from the provided lists
@@ -108,8 +109,7 @@ for (i in seq_len(nrow(users_to_process))) {
 message("Posts collection complete.")
 
 # ---- Categorize posts via LLM ---------------------------------------------
-library(httr2)
-
+stamp       <- Sys.Date()
 pcats_file  <- paste0("ad-hoc/Padua/padua_posts_cat_", stamp, ".csv")
 sample_size <- 10000
 chunk_size  <- 500
@@ -117,6 +117,8 @@ model       <- "gemini_2_5_flash"
 api_key     <- Sys.getenv("MARKETPLACE_API_KEY")
 base_url    <- Sys.getenv("MARKETPLACE_BASE_URL")
 cert_path   <- Sys.getenv("MARKETPLACE_CERT_PATH")
+
+posts_file <- "ad-hoc/Padua/padua_posts_2026-04-06.csv"
 
 if (api_key == "")   stop("MARKETPLACE_API_KEY environment variable not set")
 if (base_url == "")  stop("MARKETPLACE_BASE_URL environment variable not set")
@@ -169,7 +171,7 @@ posts <- read_csv(posts_file, show_col_types = FALSE)
 unique_posts <- posts |>
   filter(!is_repost) |>
   distinct(text) |>
-  slice_sample(n = min(sample_size, n())) |>
+  slice_sample(n =sample_size) |>
   mutate(id = row_number())
 
 # Chunk into csv strings
@@ -179,7 +181,7 @@ post_strings <- split(unique_posts, ceiling(seq_len(nrow(unique_posts)) / chunk_
 # Categorize
 chat_session <- create_chat_session(system_prompt)
 safe_chat    <- safely(\(x) chat_session(x))
-cats         <- map(post_strings, safe_chat, .progress = TRUE)
+cats         <- map(post_strings[[1]], safe_chat, .progress = TRUE)
 
 cats_df <- cats |>
   map(pluck, "result") |>
@@ -188,7 +190,7 @@ cats_df <- cats |>
   left_join(unique_posts, by = "id")
 
 cat("Processed:", nrow(cats_df), "of", nrow(unique_posts), "posts\n")
-print(cats_df |> count(category, sort = TRUE))
+cats_df |> count(category, sort = TRUE)
 
 write_csv(cats_df, pcats_file)
 message("Categorized posts saved to: ", pcats_file)
