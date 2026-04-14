@@ -1,6 +1,7 @@
 # Build a network of researchers from University of Padua
 library(tidyverse)
 library(httr2)
+library(htmlwidgets)
 devtools::load_all("../blueskynet")
 
 # Key actors from the provided lists
@@ -32,9 +33,12 @@ max_iterations <- 1
 sample_size    <- Inf
 
 # File locations
-stamp        <- Sys.Date()
-bundle_file  <- paste0("ad-hoc/Padua/padua_bundle_",   stamp, ".rds")
-profile_file <- paste0("ad-hoc/Padua/padua_profiles_", stamp, ".csv")
+stamp             <- Sys.Date()
+bundle_file       <- paste0("ad-hoc/Padua/padua_bundle_",   stamp, ".rds")
+profile_file      <- paste0("ad-hoc/Padua/padua_profiles_", stamp, ".csv")
+profile_file_core <- paste0("ad-hoc/Padua/padua_profiles_core_", stamp, ".csv")
+widget_file       <- paste0("ad-hoc/Padua/padua_widget_", stamp, ".html")
+widget_file_core  <- paste0("ad-hoc/Padua/padua_widget_core_", stamp, ".html")
 
 # Build the full expanded network
 padua_bundle <- build_network(
@@ -63,8 +67,14 @@ core_profiles <- padua_bundle$profiles |>
 padua_bundle$core_widget <- create_widget(core_net, core_profiles, prop = 1)
 
 # Save the full bundle plus a CSV of profiles for easy consumption
-saveRDS(padua_bundle, bundle_file)
+# saveRDS(padua_bundle, bundle_file)
 write.csv(padua_bundle$profiles, profile_file, row.names = FALSE)
+saveWidget(padua_bundle$widget, widget_file)
+saveWidget(padua_bundle$core_widget, widget_file_core)
+
+# ---- Fetch profiles from full list ---------------------
+core_profiles <- get_profiles(actors, token)
+write.csv(core_profiles, profile_file_core, row.names = FALSE)
 
 # ---- Fetch most recent posts for the expanded network ---------------------
 posts_file <- paste0("ad-hoc/Padua/padua_posts_", stamp, ".csv")

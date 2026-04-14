@@ -2,7 +2,9 @@
 title: "Network Analysis for University of Padua"
 author: "Lasse Hjorth Madsen"
 date: "2026-04-06"
-format: html
+format:
+  html:
+    embed-resources: true 
 toc: true
 execute:
   echo: false
