@@ -1,0 +1,168 @@
+---
+title: "Citations Analysis - Padua Data"
+author: "Lasse Hjorth Madsen"
+date: "2026-04-14"
+format: html
+toc: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+# Overview
+
+This notebook analyzes the relationship between citations and years in company using the Padua merged dataset.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(readxl)
+library(GGally)
+theme_set(theme_minimal())
+```
+
+```{r}
+#| label: load_data
+
+# Works both interactively (wd = project root) and when rendering (wd = qmd folder)
+data_dir <- if (file.exists("Padua_All_Data_Merged_09April.xlsx")) "." else "ad-hoc/Padua"
+
+# Read the Excel file
+df <- read_excel(file.path(data_dir, "Padua_All_Data_Merged_09April.xlsx"))
+```
+
+# Data Cleaning
+
+```{r}
+#| label: data_cleaning
+
+# Convert to numeric and handle outliers
+df <- df |>
+  mutate(
+    # Convert to numeric
+    across(c(`Years in Company`, Citations, Connections, `Years in Position`, `h-index`), as.numeric),
+    # Replace outlier values with NA
+    `Years in Company` = if_else(`Years in Company` >= 80, NA_real_, `Years in Company`),
+    Citations = if_else(Citations >= 20000, NA_real_, Citations),
+    Connections = if_else(Connections >= 5000, NA_real_, Connections)
+  )
+
+cat("Rows available:", nrow(df), "\n")
+cat("Rows with valid Citations:", sum(!is.na(df$Citations)), "\n")
+cat("Rows with valid Years in Company:", sum(!is.na(df$`Years in Company`)), "\n")
+
+# Show summary statistics
+df |>
+  select(`Years in Company`, Citations, Connections, `Years in Position`, `h-index`) |>
+  summary()
+```
+
+# Citations vs Years in Company
+
+```{r}
+#| label: main_plot
+#| fig-width: 10
+#| fig-height: 6
+
+df |>
+  ggplot(aes(x = `Years in Company`, y = Citations)) +
+  geom_point(alpha = 0.6, size = 2) +
+  geom_smooth(method = "lm", se = TRUE, color = "steelblue") +
+  xlim(c(0, 45)) + ylim(c(0, 10000)) +
+  labs(
+    title = "Citations vs Years in Company",
+    subtitle = "Linear trend with confidence interval",
+    x = "Years in Company",
+    y = "Citations"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(size = 12)
+  )
+```
+
+# Multiple Predictors of Citations
+
+```{r}
+#| label: faceted_predictors
+#| fig-width: 12
+#| fig-height: 10
+
+# Select potential predictor variables
+predictor_vars <- c(
+  "Connections",
+  "Years in Position",
+  "Years in Company",
+  "h-index"
+)
+
+# Create long format for faceted plotting
+df_long <- df |>
+  select(Citations, all_of(predictor_vars)) |>
+  pivot_longer(
+    cols = all_of(predictor_vars),
+    names_to = "Predictor",
+    values_to = "Value"
+  ) |>
+  filter(!is.na(Value), !is.na(Citations))
+
+# Create faceted plot
+df_long |>
+  ggplot(aes(x = Value, y = Citations)) +
+  geom_point(alpha = 0.4, size = 1.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "steelblue", linewidth = 0.8) +
+  facet_wrap(~Predictor, scales = "free", ncol = 2) +
+  labs(
+    title = "Citations vs Multiple Predictors",
+    subtitle = "Each panel shows relationship with a different predictor variable",
+    x = "Value",
+    y = "Citations"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 10)
+  )
+```
+
+# Correlation Matrix
+
+```{r}
+#| label: correlation_matrix
+
+# Calculate correlations for all predictors
+cors <- df |>
+  select(Citations, all_of(predictor_vars)) |>
+  cor(use = "pairwise.complete.obs")
+
+# Extract correlations with Citations and sort
+cors[, "Citations"] |>
+  sort(decreasing = TRUE) |>
+  as.data.frame() |>
+  setNames("Correlation with Citations") |>
+  knitr::kable(digits = 3)
+```
+
+# Scatterplot Matrix
+
+```{r}
+#| label: scatterplot_matrix
+#| column: page
+#| fig-width: 12
+#| fig-height: 12
+
+# Create scatterplot matrix
+ggpairs(
+  df |> select(Citations, all_of(predictor_vars)),
+  title = "Scatterplot Matrix: Citations and Predictors",
+  lower = list(continuous = wrap("points", alpha = 0.3, size = 0.5)),
+  diag = list(continuous = wrap("densityDiag", alpha = 0.5)),
+  upper = list(continuous = wrap("cor", size = 4))
+) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(size = 9)
+  )
+```
+
