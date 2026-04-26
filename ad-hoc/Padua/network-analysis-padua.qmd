@@ -28,6 +28,9 @@ This is an analysis of the Bluesky network of researchers from University of Pad
 library(tidyverse)
 library(knitr)
 library(DT)
+library(threejs)
+library(tidygraph)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -130,11 +133,67 @@ padua_bundle$core_widget
 
 The expanded network is richer: everyone is connected to everyone, not necessarily directly, but through others. This enables, in principle, information to travel through the *whole* network. (Notice some non-academic subnetworks, since we included *all* accounts being followed.)
 
+Node colors encode community membership. The same colors are reused for the bars in the *Padua communities* plot below, so the bar chart doubles as a legend for the widget.
+
+```{r}
+#| label: community_palette
+top_n <- 10
+
+community_levels <- padua_profiles |>
+  count(community_label, sort = TRUE) |>
+  slice_head(n = top_n) |>
+  pull(community_label)
+
+community_palette <- setNames(
+  colorRampPalette(brewer.pal(8, "Set1"))(length(community_levels)),
+  community_levels
+)
+community_palette["Other"] <- "gray50"
+```
+
 ```{r}
 #| label: expanded_widget
 #| column: page-right
 #| fig-height: 8
-padua_bundle$widget
+
+graph <- padua_net |> as_tbl_graph()
+
+profile_lookup <- padua_profiles |>
+  distinct(handle, .keep_all = TRUE) |>
+  select(handle, displayName, description, community_label)
+
+widget_nodes <- graph |>
+  activate(nodes) |>
+  as_tibble() |>
+  left_join(profile_lookup, by = c("name" = "handle")) |>
+  mutate(
+    Community = community_label |>
+      fct_other(keep = community_levels, other_level = "Other") |>
+      fct_na_value_to_level("Other"),
+    color = unname(community_palette[as.character(Community)]),
+    color = coalesce(color, "gray50")
+  )
+
+padua_widget <- graphjs(
+  graph,
+  bg           = "black",
+  vertex.size  = 0.2,
+  edge.width   = 0.3,
+  edge.alpha   = 0.3,
+  vertex.color = widget_nodes$color,
+  vertex.label = paste0(
+    widget_nodes$displayName, " [", as.character(widget_nodes$Community), "]: ",
+    widget_nodes$description
+  )
+)
+
+htmlwidgets::saveWidget(
+  padua_widget,
+  file.path(data_dir, "padua_widget_2026-04-26.html"),
+  selfcontained = TRUE
+)
+
+padua_widget
 ```
 
 ```{r}
@@ -176,19 +235,23 @@ The expanded network has more or less the same relative distribution of communit
 ```{r}
 #| label: padua_communities
 #| fig-height: 5
-padua_profiles |>
+community_plot_data <- padua_profiles |>
   mutate(
     Membership = if_else(handle %in% padua_list, "Core", "Expanded only"),
-    Community  = fct_lump_n(community_label, n = 10, other_level = "Other")
+    Community  = community_label |>
+      fct_other(keep = community_levels, other_level = "Other") |>
+      fct_na_value_to_level("Other")
   ) |>
   count(Community, Membership) |>
   group_by(Community) |>
   mutate(total = sum(n)) |>
   ungroup() |>
   mutate(Community = fct_reorder(Community, total) |>
-           fct_relevel("Other", after = 0)) |>
-  ggplot(aes(x = n, y = Community, fill = Membership)) +
-  geom_col() +
+           fct_relevel("Other", after = 0))
+
+community_plot_data |>
+  ggplot(aes(x = n, y = Community, fill = Community, alpha = Membership)) +
+  geom_col(color = "white", linewidth = 0.2) +
   geom_text(
     aes(x = total, y = Community, label = total),
     hjust = -0.2, size = 3,
@@ -196,13 +259,14 @@ padua_profiles |>
     data = \(d) distinct(d, Community, total)
   ) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.1))) +
-  scale_fill_manual(values = c("Core" = "steelblue", "Expanded only" = "lightsteelblue")) +
+  scale_fill_manual(values = community_palette, guide = "none") +
+  scale_alpha_manual(values = c("Core" = 1, "Expanded only" = 0.45)) +
   labs(
     title = "Community sizes in the Padua network",
-    subtitle = "Stacked by core vs expanded-only membership",
+    subtitle = "Bar colors match the node colors in the widget above; lighter shading = Expanded-only",
     x = "Members",
     y = "Community",
-    fill = NULL
+    alpha = NULL
   ) +
   theme_minimal() +
   theme(legend.position = "top")
