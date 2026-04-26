@@ -19,6 +19,8 @@ This notebook analyzes the relationship between citations and years in company u
 library(tidyverse)
 library(readxl)
 library(GGally)
+library(quanteda)
+library(quanteda.textstats)
 theme_set(theme_minimal())
 ```
 
@@ -164,5 +166,69 @@ ggpairs(
     plot.title = element_text(face = "bold", size = 14),
     strip.text = element_text(size = 9)
   )
+```
+
+# Bigram Frequencies (TF-IDF)
+
+```{r}
+#| label: bigram_helper
+
+top_bigrams <- function(text, n = 20) {
+  toks <- text |>
+    na.omit() |>
+    corpus() |>
+    tokens(remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE) |>
+    tokens_tolower() |>
+    tokens_remove(pattern = c(stopwords("en"), stopwords("it"), "|", "+", "-"))
+
+  bi_dfm <- toks |>
+    tokens_ngrams(n = 2, concatenator = " ") |>
+    dfm()
+
+  bi_tfidf <- bi_dfm |> dfm_tfidf()
+
+  tibble(
+    feature = featnames(bi_tfidf),
+    tfidf   = colSums(bi_tfidf)
+  ) |>
+    arrange(desc(tfidf)) |>
+    slice_head(n = n)
+}
+
+plot_bigrams <- function(text, col_name) {
+  top_bigrams(text, n = 20) |>
+    ggplot(aes(x = tfidf, y = reorder(feature, tfidf))) +
+    geom_point() +
+    labs(
+      title = paste("Top 20 bigrams in", col_name, "(TF-IDF weighted)"),
+      x = "TF-IDF (sum across documents)",
+      y = NULL
+    ) +
+    theme(plot.title = element_text(face = "bold", size = 13))
+}
+```
+
+## Job Description
+
+```{r}
+#| label: bigrams_job_description
+#| fig-height: 6
+plot_bigrams(df[["Job Description"]], "Job Description")
+```
+
+## Profile Headline
+
+```{r}
+#| label: bigrams_profile_headline
+#| fig-height: 6
+plot_bigrams(df[["Profile Headline"]], "Profile Headline")
+```
+
+## LI Current Job
+
+```{r}
+#| label: bigrams_li_current_job
+#| fig-height: 6
+plot_bigrams(df[["LI Current Job"]], "LI Current Job")
 ```
 
