@@ -1,7 +1,7 @@
 ---
-title: "Citations Analysis - Padua Data"
+title: "Exploratory Analysis - Padua Data"
 author: "Lasse Hjorth Madsen"
-date: "2026-04-14"
+date: "2026-05-04"
 format:
   html:
     embed-resources: true 
@@ -14,7 +14,7 @@ execute:
 
 # Overview
 
-This notebook analyzes the relationship between citations and years in company using the Padua merged dataset.
+This notebook analyzes the relationship between citations and years in company using the Padua merged dataset. While we're at it, we also do several other exploratory plots.
 
 ```{r}
 #| label: setup
@@ -225,6 +225,15 @@ plot_bigrams(df[["Job Description"]], "Job Description")
 #| fig-height: 6
 plot_bigrams(df[["Profile Headline"]], "Profile Headline")
 ```
+
+## Profile Summary
+
+```{r}
+#| label: bigrams_profile_summary
+#| fig-height: 6
+plot_bigrams(df[["Profile Summary"]], "Profile Summary")
+```
+
 
 ## LI Current Job
 
